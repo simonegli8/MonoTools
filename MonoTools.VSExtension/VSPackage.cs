@@ -143,7 +143,7 @@ namespace MonoTools.VSExtension {
 				}
 
 				using (RegistryKey config = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_Configuration)) {
-					MonoToolsInstaller.RegisterDebugEngine(location, config);
+					MonoToolsDebuggerInstaller.RegisterDebugEngine(location, config);
 				}
 			} catch (UnauthorizedAccessException) {
 				MessageBox.Show(

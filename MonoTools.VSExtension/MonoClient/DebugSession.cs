@@ -68,5 +68,8 @@ namespace MonoTools.VSExtension.MonoClient {
 			if (res == delay) throw new Exception("Did not receive an answer in time...");
 			throw new Exception("Cant start debugging");
 		}
+
+		public void PushBack(Message msg) => communication.PushBack(msg);
+
 	}
 }

@@ -33,7 +33,7 @@ namespace MonoTools.Debugger.Library {
 				var first = tokens.FirstOrDefault();
 				var second = tokens.Skip(1).FirstOrDefault();
 				var third = tokens.Skip(2).FirstOrDefault();
-				if (!string.IsNullOrEmpty(first) && !string.IsNullOrEmpty(second) && !string.IsNullOrEmpty(third) && 
+				if (!string.IsNullOrEmpty(first) && !string.IsNullOrEmpty(second) && !string.IsNullOrEmpty(third) &&
 					int.TryParse(first, out messagePort) && int.TryParse(second, out debuggerPort) && int.TryParse(third, out discoveryPort)) return;
 			}
 			messagePort = DefaultMessagePort;
@@ -51,27 +51,33 @@ namespace MonoTools.Debugger.Library {
 		}
 
 		public void Start() {
-			tcp = new TcpListener(IPAddress.Any, MessagePort);
-			tcp.Start();
-
+			if (!IsLocal) {
+				tcp = new TcpListener(IPAddress.Any, MessagePort);
+				tcp.Start();
+			}
 			listeningTask = Task.Factory.StartNew(() => StartListening(cts.Token), cts.Token);
 		}
 
 		private void StartListening(CancellationToken token) {
-			while (true) {
-				logger.Info("Waiting for client...");
-				if (tcp == null) {
-					token.ThrowIfCancellationRequested();
-					return;
-				}
-
-				TcpClient client = tcp.AcceptTcpClient();
-				token.ThrowIfCancellationRequested();
-
-				logger.Info("Accepted client: " + client.Client.RemoteEndPoint);
-				var clientSession = new ClientSession(client.Client, IsLocal, DebuggerPort);
-
+			if (IsLocal) {
+				var clientSession = new ClientSession(null, IsLocal, DebuggerPort);
 				Task.Factory.StartNew(clientSession.HandleSession, token).Wait();
+			} else {
+				while (true) {
+					logger.Info("Waiting for client...");
+					if (tcp == null) {
+						token.ThrowIfCancellationRequested();
+						return;
+					}
+
+					TcpClient client = tcp.AcceptTcpClient();
+					token.ThrowIfCancellationRequested();
+
+					logger.Info("Accepted client: " + client.Client.RemoteEndPoint);
+					var clientSession = new ClientSession(client.Client, IsLocal, DebuggerPort);
+
+					Task.Factory.StartNew(clientSession.HandleSession, token).Wait();
+				}
 			}
 		}
 

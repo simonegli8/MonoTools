@@ -23,7 +23,7 @@ namespace MonoTools.Debugger.Library {
 		public ClientSession(Socket socket, bool local = false, int debuggerPort = MonoDebugServer.DefaultDebuggerPort) {
 			IsLocal = local;
 			DebuggerPort = debuggerPort;
-			remoteEndpoint = ((IPEndPoint)socket.RemoteEndPoint).Address;
+			if (socket != null) remoteEndpoint = ((IPEndPoint)socket.RemoteEndPoint).Address;
 			communication = new TcpCommunication(socket, rootPath, true, local);
 		}
 
@@ -35,7 +35,7 @@ namespace MonoTools.Debugger.Library {
 					if (process != null && process.HasExited)
 						return;
 
-					while (communication.socket.Available > 4) System.Threading.Thread.Sleep(0);
+					while (!IsLocal && communication.socket.Available > 4) System.Threading.Thread.Sleep(0);
 
 					logger.Trace("Receiving content");
 					var msg = communication.Receive<CommandMessage>();

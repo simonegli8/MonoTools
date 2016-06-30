@@ -62,9 +62,9 @@ namespace MonoTools.VSExtension {
 			string monoPath = (string)monoHelperProperties.Item("MonoInstallationPath").Value;
 
 			if (!string.IsNullOrEmpty(monoPath)) {
-				outputWindowPane.OutputString("MonoTools: Mono Installation Path is set.\r\n");
+				//outputWindowPane.OutputString("MonoTools: Mono Installation Path is set.\r\n");
 			} else {
-				outputWindowPane.OutputString("MonoTools: Mono Installation Path is not set. Trying to get it from registry.\r\n");
+				//outputWindowPane.OutputString("MonoTools: Mono Installation Path is not set. Trying to get it from registry.\r\n");
 
 				RegistryKey openSubKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Wow6432Node\\Novell\\Mono");
 
@@ -158,8 +158,8 @@ namespace MonoTools.VSExtension {
 			outputWindowPane.Activate();
 
 			outputWindowPane.Clear();
-			outputWindowPane.OutputString("MonoTools, Version 1.0\r\n");
-			outputWindowPane.OutputString("Copyright © Christopher Dresel,  Simon Egli, Giesswein-Apps 2016\r\n");
+			outputWindowPane.OutputString($"MonoTools, Version {Vsix.Version}\r\n");
+			outputWindowPane.OutputString("Copyright © Christopher Dresel,  BongHo Lee, Simon Egli, Giesswein-Apps, Techl, johnshope.com 2016\r\n");
 			outputWindowPane.OutputString("\r\n");
 
 			return outputWindowPane;

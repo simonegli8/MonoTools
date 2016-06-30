@@ -20,25 +20,29 @@ namespace MonoTools.Debugger.Library {
 		public bool Compressed = false;
 		public bool IsLocal = false;
 		public static PipeQueue<Message> queue = new PipeQueue<Message>();
+		public Stack<Message> buffer;
 		public BinaryWriter writer;
 		public BinaryReader reader;
 
 		public TcpCommunication(Socket socket, string rootPath, bool compressed, bool local) {
-			this.socket = socket;
-			if (!OS.IsMono) {
-				socket.ReceiveTimeout = -1;
-				socket.SendTimeout = -1;
-			}
-			serializer = new BinaryFormatter();
-			serializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
-			serializer.TypeFormat = FormatterTypeStyle.TypesAlways;
-			serializer.Binder = new SimpleDeserializationBinder();
-			Compressed = compressed;
 			IsLocal = local;
+			if (!IsLocal) {
+				this.socket = socket;
+				if (!OS.IsMono) {
+					socket.ReceiveTimeout = -1;
+					socket.SendTimeout = -1;
+				}
+				serializer = new BinaryFormatter();
+				serializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
+				serializer.TypeFormat = FormatterTypeStyle.TypesAlways;
+				serializer.Binder = new SimpleDeserializationBinder();
+				Stream = new NetworkStream(socket, FileAccess.ReadWrite, false);
+				writer = new BinaryWriter(Stream);
+				reader = new BinaryReader(Stream);
+			}
+			Compressed = compressed;
 			RootPath = rootPath;
-			Stream = new NetworkStream(socket, FileAccess.ReadWrite, false);
-			writer = new BinaryWriter(Stream);
-			reader = new BinaryReader(Stream);
+			buffer = new Stack<Message>();
 		}
 
 		public bool IsConnected {
@@ -60,6 +64,7 @@ namespace MonoTools.Debugger.Library {
 
 
 		public virtual Message Receive() {
+			lock (this) if (buffer.Count > 0) return buffer.Pop();
 			if (IsLocal) return queue.Dequeue();
 			var len = reader.ReadInt32();
 			var buf = new byte[len];
@@ -85,8 +90,12 @@ namespace MonoTools.Debugger.Library {
 			return await Task.Run(() => Receive<T>());
 		}
 
+		public void PushBack(Message msg) {
+			lock (this) buffer.Push(msg);
+		}
+
 		public void Disconnect() {
-			if (socket != null) {
+			if (!IsLocal && socket != null) {
 				socket.Close(1);
 				socket.Dispose();
 			}

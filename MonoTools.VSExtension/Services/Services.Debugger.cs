@@ -241,7 +241,7 @@ namespace MonoTools.VSExtension {
 
 			ApplicationTypes appType = isWeb ? ApplicationTypes.WebApplication : ApplicationTypes.DesktopApplication;
 			if (isWeb) {
-				outputDirectory += @"\..\..\";
+				outputDirectory = Path.GetDirectoryName(outputDirectory);
 				var ext = (WAProjectExtender)startup.Extender["WebApplication"];
 				action = ext.DebugStartAction.ToString();
 				serverurl = ext.BrowseURL ?? ext.NonSecureUrl ?? ext.SecureUrl ?? ext.IISUrl;
@@ -298,14 +298,17 @@ namespace MonoTools.VSExtension {
 			await session.WaitForAnswerAsync();
 
 			consoleTask = Task.Run(async () => { // handle console output
-				var msg = await session.WaitForAnswerAsync();
-				while (msg is ConsoleOutputMessage) {
-					System.Diagnostics.Debugger.Log(1, "", ((ConsoleOutputMessage)msg).Text);
-					msg = await session.WaitForAnswerAsync();
-				}
+				try {
+					var msg = await session.WaitForAnswerAsync();
+					while (msg is ConsoleOutputMessage) {
+						System.Diagnostics.Debugger.Log(1, "", ((ConsoleOutputMessage)msg).Text);
+						msg = await session.WaitForAnswerAsync();
+					}
+					session.PushBack(msg);
+				} catch { }
 			});
 
-			IntPtr pInfo = GetDebugInfo(ip, targetExe, outputDir);
+			IntPtr pInfo = GetDebugInfo(ip, Path.GetFileName(targetExe), outputDir);
 			var sp = new ServiceProvider((IServiceProvider)dte);
 			try {
 				var dbg = (IVsDebugger)sp.GetService(typeof(SVsShellDebugger));
