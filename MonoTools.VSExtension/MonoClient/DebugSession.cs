@@ -22,7 +22,7 @@ namespace MonoTools.VSExtension.MonoClient {
 			IsLocal = local;
 			this.rootPath = rootPath;
 			this.framework = framework;
-			communication = new TcpCommunication(socket, rootPath, compress, local);
+			communication = new TcpCommunication(socket, rootPath, compress, local, Roles.Client);
 		}
 
 		public DebugClient Client { get; private set; }
@@ -51,8 +51,6 @@ namespace MonoTools.VSExtension.MonoClient {
 			if (!IsLocal) msg.Files.AddFolder(rootPath);
 
 			communication.Send(msg);
-
-			Console.WriteLine("Finished transmitting");
 		}
 
 		public async Task TransferFilesAsync() {

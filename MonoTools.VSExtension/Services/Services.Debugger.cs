@@ -170,11 +170,10 @@ namespace MonoTools.VSExtension {
 				BuildSolution();
 
 				if (host == null) {
-					using (server = new MonoDebugServer(true)) {
-						server.Start();
-						await AttachDebugger(Debugger.Library.MonoProcess.GetLocalIp().ToString(), true);
-					}
-				} else if (host == "*") StartSearching();
+					server = new MonoDebugServer(true);
+					server.Start();
+					await AttachDebugger(Debugger.Library.MonoProcess.GetLocalIp().ToString(), true);
+				} else if (host == "*" || host == "?") StartSearching();
 				else {
 					await AttachDebugger(host, false);
 				}
@@ -295,7 +294,7 @@ namespace MonoTools.VSExtension {
 			};
 			DebugSession session = await client.ConnectToServerAsync(ip, ports);
 			await session.TransferFilesAsync();
-			await session.WaitForAnswerAsync();
+			var statusmsg = await session.WaitForAnswerAsync();
 
 			consoleTask = Task.Run(async () => { // handle console output
 				try {

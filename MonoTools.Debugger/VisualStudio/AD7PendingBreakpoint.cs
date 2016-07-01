@@ -89,11 +89,10 @@ namespace MonoTools.Debugger.VisualStudio
         {
             Deleted = true;
 
-            try
-            {
-                LastRequest.Disable();
-            }
-            catch (VMDisconnectedException) { }
+			try {
+				LastRequest.Disable();
+			} catch (VMDisconnectedException) {
+			} catch (NullReferenceException) { }
 
             _engine.DebuggedProcess.DeletePendingBreakpoint(this);
 

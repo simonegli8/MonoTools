@@ -158,12 +158,15 @@ namespace MonoTools.VSExtension {
 			outputWindowPane.Activate();
 
 			outputWindowPane.Clear();
-			outputWindowPane.OutputString($"MonoTools, Version {Vsix.Version}\r\n");
+			outputWindowPane.OutputString($"MonoTools, Version {Application.Version}\r\n");
 			outputWindowPane.OutputString("Copyright © Christopher Dresel,  BongHo Lee, Simon Egli, Giesswein-Apps, Techl, johnshope.com 2016\r\n");
 			outputWindowPane.OutputString("\r\n");
 
 			return outputWindowPane;
 		}
 
+		public void Help() {
+			System.Diagnostics.Process.Start("https://github.com/simonegli8/MonoTools/wiki/Help");
+		}
 	}
 }

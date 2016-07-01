@@ -8,11 +8,9 @@ namespace MonoTools.Debugger.Library {
 
 	public class PipeQueue<T>: ConcurrentQueue<T>, IEnumerable<T>, IEnumerable, IDisposable {
 
-		public TimeSpan StandardTimeout = TimeSpan.FromMinutes(10);
-
 		public PipeQueue() { Closed = false; }
 
-		public override T Dequeue() { return DequeueOrBlock(StandardTimeout.Milliseconds); }
+		public override T Dequeue() { return DequeueOrBlock(); }
 
 		public bool Closed { get; set; }
 		public void Close() {

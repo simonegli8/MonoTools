@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.Win32;
 using MonoTools.Debugger.Library;
 using MonoTools.Debugger;
+using MonoTools.Debugger.VisualStudio;
 using MonoTools.VSExtension.Settings;
 using NLog;
 using Process = System.Diagnostics.Process;
@@ -24,7 +25,7 @@ using Microsoft.MIDebugEngine;
 namespace MonoTools.VSExtension {
 
 	[PackageRegistration(UseManagedResourcesOnly = true)]
-	[InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)]
+	[InstalledProductRegistration("#110", "#112", Application.Version, IconResourceID = 400)]
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[ProvideAutoLoad(Microsoft.VisualStudio.VSConstants.UICONTEXT.SolutionExists_string)]
 	[ProvideOptionPage(typeof(MonoToolsOptionsDialogPage), "MonoTools", "General", 0, 0, true)]
@@ -111,6 +112,11 @@ namespace MonoTools.VSExtension {
 				var MoMAProjectCmd = new OleMenuCommand(MoMAProjectClicked, MoMAProjectID);
 				MoMAProjectCmd.BeforeQueryStatus += HasCurrentProject;
 				mcs.AddCommand(MoMAProjectCmd);
+
+				var HelpID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.Help);
+				var HelpCmd = new MenuCommand(HelpClicked, HelpID);
+				mcs.AddCommand(HelpCmd);
+
 			}
 		}
 
@@ -120,7 +126,7 @@ namespace MonoTools.VSExtension {
 
 		private void TryRegisterAssembly() {
 			try {
-				RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(@"CLSID\{8BF3AB9F-3864-449A-93AB-E7B0935FC8F5}");
+				RegistryKey regKey = Registry.ClassesRoot.OpenSubKey($"CLSID\\{AD7Guids.EngineString}");
 
 				if (regKey != null)
 					return;
@@ -239,7 +245,11 @@ namespace MonoTools.VSExtension {
 		private void DebugRemoteClicked(object sender, EventArgs e) {
 			services.StartSearching();
 		}
-		
+
+		private void HelpClicked(object sender, EventArgs e) {
+			services.Help();
+		}
+
 		#region IDisposable Members
 		private bool disposed = false;
 		protected override void Dispose(bool disposing) {

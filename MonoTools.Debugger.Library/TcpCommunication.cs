@@ -12,6 +12,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace MonoTools.Debugger.Library {
 
+	public enum Roles {  Server, Client };
+
 	public class TcpCommunication {
 		private readonly BinaryFormatter serializer;
 		public readonly Socket socket;
@@ -19,13 +21,16 @@ namespace MonoTools.Debugger.Library {
 		public string RootPath;
 		public bool Compressed = false;
 		public bool IsLocal = false;
-		public static PipeQueue<Message> queue = new PipeQueue<Message>();
+		public static PipeQueue<Message> server = new PipeQueue<Message>();
+		public static PipeQueue<Message> client = new PipeQueue<Message>();
 		public Stack<Message> buffer;
 		public BinaryWriter writer;
 		public BinaryReader reader;
+		public Roles Role;
 
-		public TcpCommunication(Socket socket, string rootPath, bool compressed, bool local) {
+		public TcpCommunication(Socket socket, string rootPath, bool compressed, bool local, Roles role) {
 			IsLocal = local;
+			Role = role;
 			if (!IsLocal) {
 				this.socket = socket;
 				if (!OS.IsMono) {
@@ -50,8 +55,10 @@ namespace MonoTools.Debugger.Library {
 		}
 
 		public virtual void Send(Message msg) {
-			if (IsLocal) queue.Enqueue(msg);
-			else {
+			if (IsLocal) {
+				if (Role == Roles.Client) server.Enqueue(msg);
+				else client.Enqueue(msg);
+			} else {
 				var m = new MemoryStream();
 				serializer.Serialize(m, msg);
 				writer.Write((Int32)m.Length);
@@ -65,7 +72,10 @@ namespace MonoTools.Debugger.Library {
 
 		public virtual Message Receive() {
 			lock (this) if (buffer.Count > 0) return buffer.Pop();
-			if (IsLocal) return queue.Dequeue();
+			if (IsLocal) {
+				if (Role == Roles.Client) return client.Dequeue();
+				else return server.Dequeue();
+			}
 			var len = reader.ReadInt32();
 			var buf = new byte[len];
 			reader.Read(buf, 0, len);

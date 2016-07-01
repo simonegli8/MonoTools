@@ -8,10 +8,10 @@ namespace MonoTools.Debugger.Server {
 
 		private static void Main(string[] args) {
 
-			Console.WriteLine("MonoDebugger v2.1, © johnshope.com. Pass ? for help.");
+			Console.WriteLine($"MonoDebugger {Application.Version}, © johnshope.com. Pass ? for help.");
 
 			if (args.Any(a => a.Contains("help") || a.Contains("?"))) {
-				Console.WriteLine(@"usage: mono MonoDebugger.exe [-ports=message-port;debugger-port]
+				Console.WriteLine(@"usage: mono MonoDebugger.exe [-ports=message-port,debugger-port,discovery-port]
 
 The ports must be set to free ports, and to the same values
 that have been set in the VisualStudio MonoTools options.");
@@ -22,7 +22,7 @@ that have been set in the VisualStudio MonoTools options.");
 			MonoLogger.Setup();
 
 			using (var server = new MonoDebugServer(false, ports)) {
-				//server.StartAnnouncing();
+				server.StartAnnouncing();
 				server.Start();
 
 				server.WaitForExit();

@@ -66,6 +66,9 @@
 			<Group guid="GuidMonoToolsCmdSet" id="MoMAGroup" priority="0x0600">
 				<Parent guid="GuidMonoToolsCmdSet" id="TopLevelMenu"/>
 			</Group>
+			<Group guid="GuidMonoToolsCmdSet" id="HelpGroup" priority="0x0600">
+				<Parent guid="GuidMonoToolsCmdSet" id="TopLevelMenu"/>
+			</Group>
 
 		</Groups>
 
@@ -153,17 +156,7 @@
 					<ButtonText>Start Debugging</ButtonText>
 				</Strings>
 			</Button>
-<!--
-			<Button guid="GuidMonoToolsCmdSet" id="DebugMonoRemoteID" priority="0x0100" type="Button">
-				<Parent guid="GuidMonoToolsCmdSet" id="DebugGroup" />
-				<Icon guid="DebugIcon" id="Icon" />
-				<CommandFlag>DynamicVisibility</CommandFlag>
-				<CommandFlag>DefaultDisabled</CommandFlag>
-				<Strings>
-					<ButtonText>Debug Remote (Mono)</ButtonText>
-				</Strings>
-			</Button>
--->
+
 			<Button guid="GuidMonoToolsCmdSet" id="OpenLogFileID" priority="0x0100" type="Button">
 				<Parent guid="GuidMonoToolsCmdSet" id="DebugGroup" />
 				<CommandFlag>DynamicVisibility</CommandFlag>
@@ -172,7 +165,6 @@
 					<ButtonText>Debug Log...</ButtonText>
 				</Strings>
 			</Button>
-
 
 			<Button guid="GuidMonoToolsCmdSet" id="MoMASolutionID" priority="0x0100" type="Button">
 				<Parent guid="GuidMonoToolsCmdSet" id="MoMAGroup" />
@@ -183,14 +175,10 @@
 				</Strings>
 			</Button>
 
-			<Button guid="GuidMonoToolsCmdSet" id="MoMAProjectID" priority="0x0100" type="Button">
-				<Parent guid="GuidMonoToolsCmdSet" id="MoMAGroup" />
-				<CommandFlag>DynamicVisibility</CommandFlag>
-				<CommandFlag>DefaultDisabled</CommandFlag>
-				<CommandFlag>TextChanges</CommandFlag>
-				<CommandFlag>TextMenuUseButton</CommandFlag>
+			<Button guid="GuidMonoToolsCmdSet" id="HelpID" priority="0x0100" type="Button">
+				<Parent guid="GuidMonoToolsCmdSet" id="HelpGroup" />
 				<Strings>
-					<ButtonText>MoMA Project</ButtonText>
+					<ButtonText>Help...</ButtonText>
 				</Strings>
 			</Button>
 
@@ -208,8 +196,8 @@
 
 	<KeyBindings>
 		<KeyBinding guid="GuidMonoToolsCmdSet" id="TopLevelMenu" editor="guidVSStd97" key1="m" mod1="SHIFT" />
-		<KeyBinding guid="GuidMonoToolsCmdSet" id="XBuildID" editor="guidVSStd97" key1="b" mod1="Control" mod2="Alt" />
-		<KeyBinding guid="GuidMonoToolsCmdSet" id="DebugMonoID" editor="guidVSStd97" key1="VK_F5" mod1="Alt" />
+		<KeyBinding guid="GuidMonoToolsCmdSet" id="XBuildID" editor="guidVSStd97" key1="b" mod1="Control" mod2="ALT" />
+		<KeyBinding guid="GuidMonoToolsCmdSet" id="DebugMonoID" editor="guidVSStd97" key1="VK_F5" mod1="ALT" />
 	</KeyBindings>
 	
 	<Symbols>
@@ -224,6 +212,7 @@
 			<IDSymbol name="BuildProjectGroup" value="0x1022" />
 			<IDSymbol name="DebugGroup" value="0x1023" />
 			<IDSymbol name="MoMAGroup" value="0x1024" />
+			<IDSymbol name="HelpGroup" value="0x1025" />
 
 			<IDSymbol name="XBuildID" value="0x0100" />
 			<IDSymbol name="XRebuildID" value="0x0101" />
@@ -236,6 +225,7 @@
 			<IDSymbol name="OpenLogFileID" value="0x0108" />
 			<IDSymbol name="MoMASolutionID" value="0x0109" />
 			<IDSymbol name="MoMAProjectID" value="0x010A" />
+			<IDSymbol name="HelpID" value="0x010B" />
 		</GuidSymbol>
 
 		<GuidSymbol name="BuildSolutionIcon" value="{F13126C3-D1DD-41A1-B00A-B6F0DCAC618B}">
@@ -250,9 +240,6 @@
 		<GuidSymbol name="DebugIcon" value="{F0AF4170-E1C6-4B65-BF01-D9BCF19B7CDD}">
 			<IDSymbol name="Icon" value="1" />
 		</GuidSymbol>
-		<!--<GuidSymbol name="StopIcon" value="{F0AF4170-E1C6-4B65-BF01-D9BCF19B7CDD}">
-			<IDSymbol name="Icon" value="1" />
-		</GuidSymbol>-->
 	</Symbols>
 
 </CommandTable>

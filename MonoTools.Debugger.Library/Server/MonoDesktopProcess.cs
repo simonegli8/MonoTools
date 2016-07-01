@@ -16,6 +16,8 @@ namespace MonoTools.Debugger.Library {
 		internal override Process Start(string workingDirectory) {
 			string monoBin = MonoUtils.GetMonoPath();
 
+			if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
+
 			string args = GetProcessArgs();
 			ProcessStartInfo procInfo = GetProcessStartInfo(workingDirectory, monoBin);
 			procInfo.Arguments = args + " \"" + _targetExe + "\"";

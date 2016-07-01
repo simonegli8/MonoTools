@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace MonoTools.Debugger.VisualStudio
-{
-    public static class AD7Guids
+namespace MonoTools.Debugger.VisualStudio {
+
+	public static class AD7Guids
     {
-        public const string EngineString = "8BF3AB9F-3864-449A-93AB-E7B0935FC8F5";
-        public const string ProgramProviderString = "CA171DED-5920-4ACD-93C2-BD9E4FA10CA0";
+        public const string EngineString = "5ADD9827-1DDE-4C79-8403-3119D662F05A";
+        public const string ProgramProviderString = "CFF10D4B-E2CA-4CA3-9779-A7A51A583CE4";
 
         public const string EngineName = "MonoTools.Debugger";
 

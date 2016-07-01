@@ -12,7 +12,7 @@ namespace MonoTools.Debugger.Library {
 	internal class ClientSession {
 		private readonly TcpCommunication communication;
 		private readonly Logger logger = LogManager.GetCurrentClassLogger();
-		private readonly IPAddress remoteEndpoint;
+		private readonly IPAddress remoteEndpoint = null;
 		private readonly string rootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MonoDebugger");
 		private Process process;
 		private string targetExe;
@@ -24,12 +24,12 @@ namespace MonoTools.Debugger.Library {
 			IsLocal = local;
 			DebuggerPort = debuggerPort;
 			if (socket != null) remoteEndpoint = ((IPEndPoint)socket.RemoteEndPoint).Address;
-			communication = new TcpCommunication(socket, rootPath, true, local);
+			communication = new TcpCommunication(socket, rootPath, true, local, Roles.Server);
 		}
 
 		public void HandleSession() {
 			try {
-				logger.Trace("New Session from {0}", remoteEndpoint);
+				logger.Trace("New Session from {0}", remoteEndpoint?.ToString() ?? "localhost");
 
 				while (communication.IsConnected) {
 					if (process != null && process.HasExited)
@@ -43,7 +43,6 @@ namespace MonoTools.Debugger.Library {
 					switch (msg.Command) {
 					case Commands.DebugContent:
 						StartDebugging((DebugMessage)msg);
-						communication.Send(new StatusMessage() { Command = Commands.StartedMono });
 						break;
 					case Commands.Shutdown:
 						logger.Info("Shutdown-Message received");
@@ -89,9 +88,21 @@ namespace MonoTools.Debugger.Library {
 			process.ErrorDataReceived += SendOutput;
 			process.OutputDataReceived += SendOutput;
 			process.BeginOutputReadLine();
+			EnsureSentStarted();
+		}
+
+		bool startedSent = false;
+		public void EnsureSentStarted() {
+			lock (this) {
+				if (!startedSent) {
+					startedSent = true;
+					communication.Send(new StatusMessage() { Command = Commands.StartedMono });
+				}
+			}
 		}
 
 		private void SendOutput(object sender, DataReceivedEventArgs data) {
+			EnsureSentStarted();
 			if (data.Data != null) lock (communication) communication.Send(new ConsoleOutputMessage() { Text = data.Data });
 		}
 
@@ -101,6 +112,7 @@ namespace MonoTools.Debugger.Library {
 		}
 
 		private void MonoExited(object sender, EventArgs e) {
+			startedSent = false;
 			logger.Info("Program closed: " + process.ExitCode);
 			try {
 				Directory.Delete(rootPath, true);

@@ -13,3 +13,7 @@ using System.Runtime.InteropServices;
 [assembly: Guid("3edd3e10-0982-4a3c-9715-f5d6bac172ac")]
 [assembly: AssemblyVersion("2.1.0")]
 [assembly: AssemblyFileVersion("2.1.0.0")]
+
+public static class Application {
+	public const string Version = "2.1";
+}

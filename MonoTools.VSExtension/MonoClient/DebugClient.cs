@@ -32,6 +32,12 @@ namespace MonoTools.VSExtension.MonoClient {
 
 		public async Task<DebugSession> ConnectToServerAsync(string ipAddressOrHostname, string ports = null) {
 
+			MonoDebugServer.ParsePorts(ports, out MessagePort, out DebuggerPort, out DiscoveryPort);
+
+			if (IsLocal) {
+				CurrentServer = new IPAddress(new byte[]{ 127, 0, 0, 1});
+				return new DebugSession(this, type, null, OutputDirectory, Framework, false, IsLocal);
+			}
 			IPAddress server;
 			if (IPAddress.TryParse(ipAddressOrHostname, out server)) {
 				CurrentServer = server;
@@ -43,7 +49,6 @@ namespace MonoTools.VSExtension.MonoClient {
 			bool compress = TraceRoute.GetTraceRoute(CurrentServer.ToString()).Count() > 1;
 
 			var tcp = new TcpClient();
-			MonoDebugServer.ParsePorts(ports, out MessagePort, out DebuggerPort, out DiscoveryPort);
 
 			await tcp.ConnectAsync(CurrentServer, MessagePort);
 			return new DebugSession(this, type, tcp.Client, OutputDirectory, Framework, compress, IsLocal);
