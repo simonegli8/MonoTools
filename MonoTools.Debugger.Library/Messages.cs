@@ -6,7 +6,8 @@ using System.IO.Compression;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Linq;
-
+using System.Net;
+using NLog;
 
 namespace MonoTools.Debugger.Library {
 
@@ -29,6 +30,9 @@ namespace MonoTools.Debugger.Library {
 		List<string> Directories { get; set; }
 		public string RootPath { get; set; }
 		public bool HasMdbs = false;
+		public long TotalSize = 0;
+		[NonSerialized]
+		public Action<double> Progress = progress => { };
 
 		[NonSerialized]
 		Stream stream;
@@ -38,6 +42,9 @@ namespace MonoTools.Debugger.Library {
 		TcpCommunication con;
 		[NonSerialized]
 		string[] absoluteFiles;
+		[NonSerialized]
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
 
 		public FilesCollection() {
 			Files = new List<string>(); Directories = new List<string>();
@@ -55,7 +62,7 @@ namespace MonoTools.Debugger.Library {
 			absoluteFiles = Files.ToArray(); // save absolute file paths in absoluteFiles
 			for (int i = 0; i<Files.Count; i++) { // make files relative
 				var name = Files[i];
-				if (name.StartsWith(root)) Files[i] = name.Substring(root.Length).Replace(Path.DirectorySeparatorChar, '/'); ;
+				if (name.StartsWith(root)) Files[i] = name.Substring(root.Length).Replace(Path.DirectorySeparatorChar, '/');
 			}
 		}
 
@@ -83,6 +90,7 @@ namespace MonoTools.Debugger.Library {
 			}
 			if (!file.Contains(".vshost.exe")) Files.Add(file); // omit vshost.exe
 			HasMdbs |= ismdb;
+			TotalSize += new FileInfo(file).Length;
 		}
 
 		public void AddFolder(string path) {
@@ -97,17 +105,19 @@ namespace MonoTools.Debugger.Library {
 			mode = StreamModes.Write;
 			stream = connection.Stream;
 			var w = connection.writer;
-			w.Write(connection.Compressed);
+			System.Diagnostics.Debugger.Log(1, "", " ");
+			long position = 0;
 			foreach (var file in EnumerateFiles()) {
 				if (!string.IsNullOrEmpty(file.Name)) {
 					w.Write(file.Name);
 					var comp = NeedsCompression(connection, file.Name);
 					w.Write(comp);
+					w.Write((Int64)file.Content.Length);
 					Stream writer;
 					if (comp) writer = new DeflateStream(stream, CompressionLevel.Fastest, true);
 					else writer = stream;
-					w.Write((Int64)file.Content.Length);
-					file.Content.CopyTo(writer); System.Diagnostics.Debugger.Log(1, "", ".");
+					file.Content.CopyTo(writer, pos => Progress(((double)(position + pos))/TotalSize));
+					position += file.Content.Length;
 				}
 			}
 			w.Write("");
@@ -117,12 +127,14 @@ namespace MonoTools.Debugger.Library {
 			con = connection;
 			stream = connection.Stream;
 			if (Directory.Exists(RootPath)) Directory.Delete(RootPath, true);
+			long position = 0;
 			foreach (var file in EnumerateFiles()) { // save files contents
 				var path = Path.Combine(RootPath, file.Name);
 				var dir = Path.GetDirectoryName(path);
 				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 				using (var w = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None)) {
-					file.Content.CopyTo(w); Console.Write(".");
+					file.Content.CopyTo(w, pos => Progress(((double)(position + pos))/TotalSize));
+					position += w.Length;
 				}
 			}
 			Console.WriteLine();
@@ -138,8 +150,8 @@ namespace MonoTools.Debugger.Library {
 			} else { // read
 				var r = con.reader;
 				var name = r.ReadString();
-				var comp = r.ReadBoolean();
 				while (name != "") {
+					var comp = r.ReadBoolean();
 					HasMdbs |= name.EndsWith(".dll.mdb") || name.EndsWith(".exe.mdb");
 					Stream reader;
 					var len = r.ReadInt64();
@@ -159,7 +171,7 @@ namespace MonoTools.Debugger.Library {
 	}
 
 	public enum ApplicationTypes { DesktopApplication, WebApplication }
-	public enum Commands : byte { DebugContent, StartedMono, Shutdown }
+	public enum Commands : byte { DebugContent, StartedMono, Shutdown, BadPassword }
 	public enum Frameworks { Net2, Net4 }
 
 	[Serializable]
@@ -191,19 +203,60 @@ namespace MonoTools.Debugger.Library {
 		public bool IsLocal { get; set; }
 		public string LocalPath { get; set; }
 		public bool HasMdbs => Files.HasMdbs;
+		public string SecurityToken { get; set; }
+		public string RootPath { get { return Files.RootPath; } set { Files.RootPath = value; } }
 		public FilesCollection Files { get; protected set; } = new FilesCollection();
-		public void Send(TcpCommunication con) { if (!IsLocal) Files.Send(con); }
+		public void Send(TcpCommunication con) {
+			if (!IsLocal) {
+				Files.Progress = con.Progress;
+				Files.Send(con);
+			}
+		}
 		public void Receive(TcpCommunication con) {
 			if (!IsLocal) {
-				var oldroot = RootPath; 
+				MonoDebugServer.logger.Info("Receiving content:");
 				RootPath = con.RootPath;
+				Files.Progress = con.Progress;
 				Files.Receive(con);
 			} else {
 				RootPath = LocalPath;
 			}
 			WorkingDirectory = WorkingDirectory ?? RootPath;
+			AbsolutePaths();
 		}
-		public string RootPath { get { return Files.RootPath; } set { Files.RootPath = value; } }
+
+		[OnSerializing]
+		public void RelativePaths(StreamingContext context) {
+			var root = RootPath;
+			if (!root.EndsWith(Path.DirectorySeparatorChar.ToString())) root += Path.DirectorySeparatorChar; // append dir separator char
+			// make Executable relative
+			if (Executable.StartsWith(root)) Executable = Executable.Substring(root.Length).Replace(Path.DirectorySeparatorChar, '/');
+		}
+
+		//[OnDeserialized]
+		public void AbsolutePaths() {
+			// make Executable absolute
+			if (!Path.IsPathRooted(Executable)) Executable = Path.Combine(RootPath, Executable.Replace('/', Path.DirectorySeparatorChar));
+		}
+
+		public void SetSecurityToken(TcpCommunication con) {
+			if (!string.IsNullOrEmpty(con.Password)) {
+				SecurityToken = Cryptography.Encrypt((((IPEndPoint)con.socket.LocalEndPoint).Address).ToString(), con.Password);
+			}
+		}
+
+		public bool CheckSecurityToken(TcpCommunication con) {
+			if (!string.IsNullOrEmpty(con.Password)) {
+				if (string.IsNullOrEmpty(SecurityToken)) return false;
+				try {
+					var ip = Cryptography.Decrypt(SecurityToken, con.Password);
+					return ip == ((IPEndPoint)con.socket.RemoteEndPoint).Address.ToString();
+				} catch {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 
 	[Serializable]

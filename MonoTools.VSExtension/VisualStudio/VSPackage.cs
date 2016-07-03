@@ -46,6 +46,7 @@ namespace MonoTools.VSExtension {
 			TryRegisterAssembly();
 
 			ErrorsWindow.Initialize(this);
+			StatusBarProgress.Initialize(this);
 
 			/* Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary {
 				Source = new Uri("/MonoTools;component/Resources/Resources.xaml", UriKind.Relative)
@@ -88,15 +89,10 @@ namespace MonoTools.VSExtension {
 				startMonoMenuItem.BeforeQueryStatus += HasStartupProject;
 				mcs.AddCommand(startMonoMenuItem);
 
-				var debugMonoLocallyID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.DebugMonoLocal);
+				var debugMonoLocallyID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.DebugMono);
 				var debugMonoCmd = new OleMenuCommand(DebugMonoClicked, debugMonoLocallyID);
 				debugMonoCmd.BeforeQueryStatus += HasStartupProject;
 				mcs.AddCommand(debugMonoCmd);
-
-				/* var debugMonoRemoteID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.DebugMonoRemote);
-				var remoteCmd = new OleMenuCommand(DebugRemoteClicked, debugMonoRemoteID);
-				remoteCmd.BeforeQueryStatus += HasStartupProject;
-				mcs.AddCommand(remoteCmd); */
 
 				var logFileID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.OpenLogFile);
 				var logFileCmd = new OleMenuCommand(OpenLogFile, logFileID);
@@ -112,6 +108,10 @@ namespace MonoTools.VSExtension {
 				var MoMAProjectCmd = new OleMenuCommand(MoMAProjectClicked, MoMAProjectID);
 				MoMAProjectCmd.BeforeQueryStatus += HasCurrentProject;
 				mcs.AddCommand(MoMAProjectCmd);
+
+				var ServerSetupID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.ServerSetup);
+				var ServerSetupCmd = new MenuCommand(ServerSetupClicked, ServerSetupID);
+				mcs.AddCommand(ServerSetupCmd);
 
 				var HelpID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.Help);
 				var HelpCmd = new MenuCommand(HelpClicked, HelpID);
@@ -244,6 +244,10 @@ namespace MonoTools.VSExtension {
 		
 		private void DebugRemoteClicked(object sender, EventArgs e) {
 			services.StartSearching();
+		}
+
+		private void ServerSetupClicked(object sender, EventArgs e) {
+			services.ServerSetup();
 		}
 
 		private void HelpClicked(object sender, EventArgs e) {

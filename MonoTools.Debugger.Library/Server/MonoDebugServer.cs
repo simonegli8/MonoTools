@@ -12,14 +12,16 @@ namespace MonoTools.Debugger.Library {
 
 	public class MonoDebugServer : IDisposable {
 		public const int DefaultMessagePort = 13881;
-		public const int DefaultDebuggerPort = 11000;
+		public const int DefaultDebuggerPort = 13882;
 		public const int DefaultDiscoveryPort = 13883;
 
 		public int MessagePort = DefaultMessagePort;
 		public int DebuggerPort = DefaultDebuggerPort;
 		public int DiscoveryPort = DefaultDiscoveryPort;
 
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		public string Password = null;
+
+		public static readonly Logger logger = LogManager.GetCurrentClassLogger();
 		private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
 		private Task listeningTask;
@@ -41,9 +43,11 @@ namespace MonoTools.Debugger.Library {
 			discoveryPort = DefaultDiscoveryPort;
 		}
 
-		public MonoDebugServer(bool local = false, string ports = null) {
+		public MonoDebugServer(bool local = false, string ports = null, string password = null) {
 			IsLocal = local;
 			ParsePorts(ports, out MessagePort, out DebuggerPort, out DiscoveryPort);
+			Password = password;
+			if (!string.IsNullOrEmpty(Password)) logger.Info("Password protected");
 		}
 
 		public void Dispose() {
@@ -60,8 +64,9 @@ namespace MonoTools.Debugger.Library {
 
 		private void StartListening(CancellationToken token) {
 			if (IsLocal) {
-				var clientSession = new ClientSession(null, IsLocal, DebuggerPort);
+				var clientSession = new ClientSession(null, IsLocal, DebuggerPort, Password);
 				Task.Factory.StartNew(clientSession.HandleSession, token).Wait();
+				token.ThrowIfCancellationRequested();
 			} else {
 				while (true) {
 					logger.Info("Waiting for client...");
@@ -74,7 +79,7 @@ namespace MonoTools.Debugger.Library {
 					token.ThrowIfCancellationRequested();
 
 					logger.Info("Accepted client: " + client.Client.RemoteEndPoint);
-					var clientSession = new ClientSession(client.Client, IsLocal, DebuggerPort);
+					var clientSession = new ClientSession(client.Client, IsLocal, DebuggerPort, Password);
 
 					Task.Factory.StartNew(clientSession.HandleSession, token).Wait();
 				}

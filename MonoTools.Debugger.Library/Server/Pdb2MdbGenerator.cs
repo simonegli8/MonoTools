@@ -8,10 +8,10 @@ using NLog;
 
 namespace MonoTools.Debugger.Library {
 
-	internal class Pdb2MdbGenerator {
+	public class Pdb2MdbGenerator {
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-		internal void GeneratePdb2Mdb(string directoryName) {
+		public void GeneratePdb2Mdb(string directoryName) {
 			//logger.Trace(directoryName);
 			IEnumerable<string> files =
 				 Directory.GetFiles(directoryName, "*.dll")
@@ -25,8 +25,9 @@ namespace MonoTools.Debugger.Library {
 				try {
 					string fileNameWithoutExt = Path.GetFileNameWithoutExtension(file);
 					string pdbFile = Path.Combine(Path.GetDirectoryName(file), fileNameWithoutExt + ".pdb");
-					if (File.Exists(pdbFile)) {
-						logger.Trace("Generate mdb for: " + file);
+					string mdbFile = file + ".mdb";
+					if (File.Exists(pdbFile) && (!File.Exists(mdbFile) || File.GetLastWriteTimeUtc(pdbFile) >= File.GetLastWriteTimeUtc(mdbFile))) {
+						logger.Trace("Generate mdb for: " + Path.GetFileName(file));
 						Pdb2Mdb.Converter.Convert(file);
 					}
 				} catch (Exception ex) {
@@ -35,6 +36,16 @@ namespace MonoTools.Debugger.Library {
 			});
 
 			logger.Trace("Transformed Debuginformation pdb2mdb");
+		}
+
+		public void RemoveMdbs(string directoryName) {
+			IEnumerable<string> files =
+				 Directory.GetFiles(directoryName, "*.dll")
+					  .Concat(Directory.GetFiles(directoryName, "*.exe"))
+					  .Where(x => !x.Contains(".vshost.exe"))
+					  .Select(f => f + ".mdb")
+					  .Where(f => File.Exists(f));
+			Parallel.ForEach(files, file => File.Delete(file));
 		}
 	}
 }

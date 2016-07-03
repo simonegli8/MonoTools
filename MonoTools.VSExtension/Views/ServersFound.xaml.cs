@@ -24,7 +24,11 @@ namespace MonoTools.VSExtension.Views
             DialogResult = true;
         }
 
-        private void Cancel(object sender, RoutedEventArgs e)
+		private void DoubleClick(object sender, RoutedEventArgs e) {
+			DialogResult = true;
+		}
+
+		private void Cancel(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
         }

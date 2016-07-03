@@ -14,23 +14,26 @@ namespace MonoTools.Debugger.Library
         {
             var basePath = new FileInfo(typeof(MonoLogger).Assembly.Location).Directory.FullName;
             var logPath = Path.Combine(basePath, "Log");
-            if (!Directory.Exists(logPath))
-                Directory.CreateDirectory(logPath);
+            if (!Directory.Exists(logPath)) Directory.CreateDirectory(logPath);
             LoggerPath = Path.Combine(logPath, "MonoTools.Debugger.log");
 
             var config = new LoggingConfiguration();
             var target = new NLog.Targets.DebuggerTarget();
-				target.Layout = new NLog.Layouts.SimpleLayout("MonoDebugger: ${message}");
+				target.Layout = new NLog.Layouts.SimpleLayout("${message}");
 				config.AddTarget("file", target);
-            config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, target));
+#if DEBUG
+			config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, target));
+#else
+			config.LoggingRules.Add(new LoggingRule("*", LogLevel.Info, target));
+#endif
 
-            var fileTarget = new FileTarget { FileName = LoggerPath };
+			var fileTarget = new FileTarget { FileName = LoggerPath };
             config.AddTarget("file", fileTarget);
             config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, fileTarget));
             var console = new ColoredConsoleTarget();
 				console.Layout = new NLog.Layouts.SimpleLayout("${message}");
             config.AddTarget("file", console);
-            config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, console));
+            config.LoggingRules.Add(new LoggingRule("*", LogLevel.Info, console));
 
             LogManager.Configuration = config;
         }

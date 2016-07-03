@@ -61,7 +61,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MonoTools.VSExtension</RootNamespace>
     <AssemblyName>MonoTools</AssemblyName>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\sn.pfx</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
@@ -126,16 +126,20 @@
     <Reference Include="Mono.Debugger.Soft_4.0.4.4">
       <HintPath>..\Assemblies\Mono.Debugger.Soft_4.0.4.4.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.3.4\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.3.5\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Renci.SshNet, Version=2013.4.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2013.4.7\lib\net40\Renci.SshNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Core" />
@@ -173,15 +177,10 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Guids.cs" />
-    <Compile Include="Services\PropertiesExtension.cs" />
     <Compile Include="Services\Services.cs" />
     <Compile Include="Services\Services.Build.cs" />
     <Compile Include="Services\Services.MoMA.cs" />
-    <Compile Include="MonoToolsOptionsDialogPage.cs" />
-    <Compile Include="MonoToolsInstaller.cs" />
-    <Compile Include="PkgCmdID.cs" />
+    <Compile Include="Services\Services.Setup.cs" />
     <Compile Include="Settings\UserSettings.cs" />
     <Compile Include="Settings\UserSettingsManager.cs" />
     <Compile Include="MonoClient\DebugClient.cs" />
@@ -191,16 +190,31 @@
     <Compile Include="source.extension.cs">
       <DependentUpon>source.extension.vsixmanifest</DependentUpon>
     </Compile>
-    <Compile Include="ErrorListWriter.cs" />
-    <Compile Include="VSPackage.cs" />
     <Compile Include="Services\Services.Debugger.cs" />
+    <Compile Include="Utils\Connection.cs" />
+    <Compile Include="Utils\PropertiesExtension.cs" />
+    <Compile Include="Utils\SftpExtensions.cs" />
+    <Compile Include="Utils\SshExtensions.cs" />
+    <Compile Include="Utils\VsLogSeverity.cs" />
+    <Compile Include="Utils\VsOutputWindowPaneExtensions.cs" />
     <Compile Include="Views\ServersFound.xaml.cs">
       <DependentUpon>ServersFound.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ServersFoundViewModel.cs" />
+    <Compile Include="Views\SetupSSHServer.xaml.cs">
+      <DependentUpon>SetupSSHServer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="VisualStudio\ErrorListWriter.cs" />
+    <Compile Include="VisualStudio\GlobalSuppressions.cs" />
+    <Compile Include="VisualStudio\Guids.cs" />
+    <Compile Include="VisualStudio\MonoToolsInstaller.cs" />
+    <Compile Include="VisualStudio\MonoToolsOptionsDialogPage.cs" />
+    <Compile Include="VisualStudio\PkgCmdID.cs" />
+    <Compile Include="VisualStudio\StatusBarProgress.cs" />
+    <Compile Include="VisualStudio\VSPackage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Views\MonoToolsLogo.png">
+    <Resource Include="Resources\MonoToolsLogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Content Include="Resources\Screenshot.png">
@@ -212,7 +226,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="app.config" />
+    <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
       <Generator>VsixManifestGenerator</Generator>
@@ -220,7 +234,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="MonoTools.vsct">
+    <VSCTCompile Include="VisualStudio\MonoTools.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
       <Generator>VsctGenerator</Generator>
@@ -231,10 +245,6 @@
     <Resource Include="Resources\stop.png" />
     <Resource Include="Resources\buildproject.png" />
     <Resource Include="Resources\buildsolution.png" />
-    <Content Include="Resources\MonoToolsLogo.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Resource Include="Resources\MonoToolsLogo.png">
       <Link>MonoToolsLogo.png</Link>
     </Resource>
@@ -257,6 +267,10 @@
     <Page Include="Views\ServersFound.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SetupSSHServer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

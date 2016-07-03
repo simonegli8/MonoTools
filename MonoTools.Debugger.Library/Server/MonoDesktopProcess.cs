@@ -8,7 +8,7 @@ namespace MonoTools.Debugger.Library {
 		private readonly string _targetExe;
 		string arguments;
 
-		  public MonoDesktopProcess(string targetExe, string arguments) {
+		public MonoDesktopProcess(string targetExe, string arguments) {
 			_targetExe = targetExe;
 			this.arguments = arguments;
 		}
@@ -23,7 +23,17 @@ namespace MonoTools.Debugger.Library {
 			procInfo.Arguments = args + " \"" + _targetExe + "\"";
 			if (!string.IsNullOrEmpty(arguments)) procInfo.Arguments += " " + arguments;
 
-			process = Process.Start(procInfo);
+			process = new System.Diagnostics.Process();
+			process.StartInfo = procInfo;
+			process.EnableRaisingEvents = true;
+			if (RedirectOutput) {
+				process.ErrorDataReceived += (sender, data) => Output(data.Data + "\r\n");
+				process.OutputDataReceived += (sender, data) => Output(data.Data + "\r\n");
+				process.BeginOutputReadLine();
+			} else {
+				procInfo.UseShellExecute = true;
+			}
+			process.Start();
 
 			RaiseProcessStarted();
 			return process;

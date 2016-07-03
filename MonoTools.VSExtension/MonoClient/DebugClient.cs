@@ -13,13 +13,16 @@ namespace MonoTools.VSExtension.MonoClient {
 		public int MessagePort;
 		public int DebuggerPort;
 		public int DiscoveryPort;
+		public string Password;
 
-		public DebugClient(ApplicationTypes type, string targetExe, string outputDirectory, bool local = false, Frameworks framework = Frameworks.Net4) {
+		public DebugClient(ApplicationTypes type, string targetExe, string outputDirectory, bool local = false, Frameworks framework = Frameworks.Net4, string ports = null, string passeword = null) {
 			this.type = type;
 			TargetExe = targetExe;
 			OutputDirectory = outputDirectory;
 			IsLocal = local;
 			this.framework = framework;
+			Password = Password;
+			MonoDebugServer.ParsePorts(ports, out MessagePort, out DebuggerPort, out DiscoveryPort);
 		}
 
 		public string TargetExe { get; set; }
@@ -30,9 +33,7 @@ namespace MonoTools.VSExtension.MonoClient {
 		public string WorkingDirectory { get; set; }
 		public string Url { get; set; }
 
-		public async Task<DebugSession> ConnectToServerAsync(string ipAddressOrHostname, string ports = null) {
-
-			MonoDebugServer.ParsePorts(ports, out MessagePort, out DebuggerPort, out DiscoveryPort);
+		public async Task<DebugSession> ConnectToServerAsync(string ipAddressOrHostname) {
 
 			if (IsLocal) {
 				CurrentServer = new IPAddress(new byte[]{ 127, 0, 0, 1});

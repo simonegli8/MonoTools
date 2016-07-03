@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Linq;
-using System.Xml;
 using NLog;
 
 namespace MonoTools.Debugger.Library {
@@ -20,11 +19,24 @@ namespace MonoTools.Debugger.Library {
 		public int DebuggerPort;
 
 
-		public ClientSession(Socket socket, bool local = false, int debuggerPort = MonoDebugServer.DefaultDebuggerPort) {
+		public ClientSession(Socket socket, bool local = false, int debuggerPort = MonoDebugServer.DefaultDebuggerPort, string password = null) {
 			IsLocal = local;
 			DebuggerPort = debuggerPort;
 			if (socket != null) remoteEndpoint = ((IPEndPoint)socket.RemoteEndPoint).Address;
-			communication = new TcpCommunication(socket, rootPath, true, local, Roles.Server);
+			communication = new TcpCommunication(socket, rootPath, true, local, Roles.Server, password);
+			communication.Progress = progress => {
+				const int Width = 60;
+				Console.CursorLeft = 0;
+				var n = (int)(Width*progress+0.5);
+				var p = ((int)(progress*100+0.5)).ToString()+"%";
+				var t = (Width - p.Length)/2;
+				var backColor = Console.BackgroundColor;
+				for (int i = 0; i < Width; i++) {
+					Console.BackgroundColor = i < n ? ConsoleColor.DarkGreen : ConsoleColor.DarkGray;
+					Console.Write((i < t || i >= t + p.Length) ? ' ' : p[i-t]);
+				}
+				Console.BackgroundColor = backColor;
+			};
 		}
 
 		public void HandleSession() {
@@ -35,22 +47,30 @@ namespace MonoTools.Debugger.Library {
 					if (process != null && process.HasExited)
 						return;
 
-					while (!IsLocal && communication.socket.Available > 4) System.Threading.Thread.Sleep(0);
-
-					logger.Trace("Receiving content");
 					var msg = communication.Receive<CommandMessage>();
+
+					if (msg == null) return;
 
 					switch (msg.Command) {
 					case Commands.DebugContent:
-						StartDebugging((DebugMessage)msg);
+						var dbg = msg as DebugMessage;
+						if (dbg != null) {
+							if (!dbg.CheckSecurityToken(communication)) {
+								communication.Send(new StatusMessage { Command = Commands.BadPassword });
+#if !DEBUG
+								logger.Error("Wait one minute after invalid password failure.");
+								System.Threading.Thread.Sleep(TimeSpan.FromMinutes(1));
+#endif
+							} else {
+								StartDebugging(dbg);
+							}
+						}
 						break;
 					case Commands.Shutdown:
-						logger.Info("Shutdown-Message received");
+						logger.Trace("Shutdown-Message received");
 						return;
 					}
 				}
-			} catch (XmlException xmlException) {
-				logger.Info("CommunicationError : " + xmlException);
 			} catch (Exception ex) {
 				logger.Error(ex);
 			} finally {
@@ -77,17 +97,16 @@ namespace MonoTools.Debugger.Library {
 		}
 
 		private void StartMono(ApplicationTypes type, Frameworks framework, string arguments, string workingDirectory, string url) {
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.Clear();
 			MonoProcess proc = MonoProcess.Start(type, targetExe, framework, arguments, url);
 			proc.DebuggerPort = DebuggerPort;
 			workingDirectory = string.IsNullOrEmpty(workingDirectory) ? rootPath : workingDirectory;
 			proc.ProcessStarted += MonoProcessStarted;
+			proc.Output = SendOutput;
 			process = proc.Start(workingDirectory);
-			logger.Info($"{proc.GetType().Name} started: \"{proc.process.StartInfo.FileName}\" {proc.process.StartInfo.Arguments}");
-			process.EnableRaisingEvents = true;
+			logger.Trace($"{proc.GetType().Name} started: \"{proc.process.StartInfo.FileName}\" {proc.process.StartInfo.Arguments}");
 			process.Exited += MonoExited;
-			process.ErrorDataReceived += SendOutput;
-			process.OutputDataReceived += SendOutput;
-			process.BeginOutputReadLine();
 			EnsureSentStarted();
 		}
 
@@ -101,9 +120,10 @@ namespace MonoTools.Debugger.Library {
 			}
 		}
 
-		private void SendOutput(object sender, DataReceivedEventArgs data) {
+		private void SendOutput(string text) {
 			EnsureSentStarted();
-			if (data.Data != null) lock (communication) communication.Send(new ConsoleOutputMessage() { Text = data.Data });
+			logger.Info(text);
+			if (text != null) lock (communication) communication.Send(new ConsoleOutputMessage() { Text = text });
 		}
 
 		private void MonoProcessStarted(object sender, EventArgs e) {

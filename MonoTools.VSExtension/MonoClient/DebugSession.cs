@@ -16,13 +16,14 @@ namespace MonoTools.VSExtension.MonoClient {
 		public bool IsLocal = false;
 		Frameworks framework;
 
-		public DebugSession(DebugClient debugClient, ApplicationTypes type, Socket socket, string rootPath, Frameworks framework, bool compress = false, bool local = false) {
+		public DebugSession(DebugClient debugClient, ApplicationTypes type, Socket socket, string rootPath, Frameworks framework, bool compress = false, bool local = false, string password = null) {
 			Client = debugClient;
 			this.type = type;
 			IsLocal = local;
 			this.rootPath = rootPath;
 			this.framework = framework;
-			communication = new TcpCommunication(socket, rootPath, compress, local, Roles.Client);
+			communication = new TcpCommunication(socket, rootPath, compress, local, Roles.Client, password);
+			communication.Progress = progress => StatusBarProgress.Progress(progress);
 		}
 
 		public DebugClient Client { get; private set; }

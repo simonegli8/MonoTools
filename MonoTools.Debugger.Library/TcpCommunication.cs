@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
 
 namespace MonoTools.Debugger.Library {
 
@@ -20,6 +21,7 @@ namespace MonoTools.Debugger.Library {
 		public NetworkStream Stream;
 		public string RootPath;
 		public bool Compressed = false;
+		public string Password = null;
 		public bool IsLocal = false;
 		public static PipeQueue<Message> server = new PipeQueue<Message>();
 		public static PipeQueue<Message> client = new PipeQueue<Message>();
@@ -27,10 +29,12 @@ namespace MonoTools.Debugger.Library {
 		public BinaryWriter writer;
 		public BinaryReader reader;
 		public Roles Role;
+		public Action<double> Progress = progress => { };
 
-		public TcpCommunication(Socket socket, string rootPath, bool compressed, bool local, Roles role) {
+		public TcpCommunication(Socket socket, string rootPath, bool compressed, bool local, Roles role, string password = null) {
 			IsLocal = local;
 			Role = role;
+			Password = password;
 			if (!IsLocal) {
 				this.socket = socket;
 				if (!OS.IsMono) {
@@ -69,23 +73,24 @@ namespace MonoTools.Debugger.Library {
 			}
 		}
 
-
 		public virtual Message Receive() {
-			lock (this) if (buffer.Count > 0) return buffer.Pop();
-			if (IsLocal) {
-				if (Role == Roles.Client) return client.Dequeue();
-				else return server.Dequeue();
-			}
-			var len = reader.ReadInt32();
-			var buf = new byte[len];
-			reader.Read(buf, 0, len);
-			var m = new MemoryStream(buf); 
-			var msg = (Message)serializer.Deserialize(m);
-			if (msg is IExtendedMessage) {
-				if (msg is IMessageWithFiles) ((IMessageWithFiles)msg).Files.RootPath = RootPath;
-				((IExtendedMessage)msg).Receive(this);
-			}
-			return msg;
+			try {
+				lock (this) if (buffer.Count > 0) return buffer.Pop();
+				if (IsLocal) {
+					if (Role == Roles.Client) return client.Dequeue();
+					else return server.Dequeue();
+				}
+				var len = reader.ReadInt32();
+				var buf = new byte[len];
+				//while (socket.Available <= 0) System.Threading.Thread.Sleep(10);
+				reader.Read(buf, 0, len);
+				var m = new MemoryStream(buf);
+				var msg = (Message)serializer.Deserialize(m);
+				if (msg is IExtendedMessage) {
+					((IExtendedMessage)msg).Receive(this);
+				}
+				return msg;
+			} catch { return null; }
 		}
 		public T Receive<T>() where T : Message, new() => Receive() as T;
 

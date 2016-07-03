@@ -132,7 +132,10 @@ namespace MonoTools.Debugger.VisualStudio
             DebugHelper.TraceEnteringMethod();
 
             Callback = new EngineCallback(this, ad7Callback);
-            DebuggedProcess = new DebuggedProcess(this, IPAddress.Parse(args), Callback);
+				var tokens = args.Split(':');
+				var host = IPAddress.Parse(tokens[0]);
+				var dbgport = int.Parse(tokens[1]);
+            DebuggedProcess = new DebuggedProcess(this, host, dbgport, Callback);
             DebuggedProcess.ApplicationClosed += _debuggedProcess_ApplicationClosed;
             DebuggedProcess.StartDebugging();
 

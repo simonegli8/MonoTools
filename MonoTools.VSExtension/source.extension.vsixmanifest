@@ -7,6 +7,8 @@
 		<Description xml:space="preserve">MonoTools. Debugging, XBuild, pdb2mdb &amp; MoMA support for Mono in VisualStudio.</Description>
 		<MoreInfo>https://github.com/simonegli8/MonoTools</MoreInfo>
 		<License>LICENSE.txt</License>
+		<GettingStartedGuide>https://github.com/simonegli8/MonoTools/wiki/Help</GettingStartedGuide>
+		<ReleaseNotes>https://github.com/simonegli8/MonoTools/releases/2.1</ReleaseNotes>
 		<Icon>Resources\MonoToolsLogo.png</Icon>
 		<PreviewImage>Resources\Screenshot.png</PreviewImage>
 		<Tags>mono, tools, debugger, remote</Tags>

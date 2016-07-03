@@ -134,10 +134,10 @@ namespace MonoTools.VSExtension {
 				string host = null;
 				if (isWeb) {
 					var ext = (WAProjectExtender)startup.Extender["WebApplication"];
-					var serverurl = ext.NonSecureUrl ?? ext.SecureUrl;
-					if (serverurl.Contains("*")) host = "*";
+					var serverurl = ext.BrowseURL ?? ext.NonSecureUrl ?? ext.SecureUrl ?? ext.IISUrl ?? "http://127.0.0.1:9000";
+					var uri = new Uri(serverurl);
+					if (uri.Host == "*" || uri.Host == "") host = "*";
 					else {
-						var uri = new Uri(serverurl);
 						host = uri.Host;
 						var local = Dns.GetHostAddresses(host).Any(a => a.IsIPv6LinkLocal || a == IPAddress.Parse("127.0.0.1"));
 						if (local) host = null;
@@ -173,7 +173,7 @@ namespace MonoTools.VSExtension {
 					server = new MonoDebugServer(true);
 					server.Start();
 					await AttachDebugger(Debugger.Library.MonoProcess.GetLocalIp().ToString(), true);
-				} else if (host == "*" || host == "?") StartSearching();
+				} else if (host == "*" || host == "?" || host == "") StartSearching();
 				else {
 					await AttachDebugger(host, false);
 				}
@@ -236,16 +236,17 @@ namespace MonoTools.VSExtension {
 			page = props.Get("StartPage");
 
 			Properties monoHelperProperties = dte.Properties["MonoTools", "General"];
-			string ports = (string)monoHelperProperties.Item("MonoDebuggerPorts").Value;
+			var ports = (string)monoHelperProperties.Item("MonoDebuggerPorts").Value;
+			var password = (string)monoHelperProperties.Item("MonoDebuggerPassword").Value;
 
 			ApplicationTypes appType = isWeb ? ApplicationTypes.WebApplication : ApplicationTypes.DesktopApplication;
 			if (isWeb) {
 				outputDirectory = Path.GetDirectoryName(outputDirectory);
 				var ext = (WAProjectExtender)startup.Extender["WebApplication"];
 				action = ext.DebugStartAction.ToString();
-				serverurl = ext.BrowseURL ?? ext.NonSecureUrl ?? ext.SecureUrl ?? ext.IISUrl;
+				serverurl = ext.BrowseURL ?? ext.NonSecureUrl ?? ext.SecureUrl ?? ext.IISUrl ?? "http://127.0.0.1:9000";
 
-				StartDebugger(ApplicationTypes.WebApplication, target, outputDirectory, local, framework, null, serverurl, null, ipAddress, ports);
+				await StartDebugger(ApplicationTypes.WebApplication, target, outputDirectory, local, framework, null, serverurl, null, ipAddress, ports, password);
 
 				if (action == "2") {
 					var run = new ProcessStartInfo(ext.StartExternalProgram, ext.StartCmdLineArguments) {
@@ -265,7 +266,7 @@ namespace MonoTools.VSExtension {
 				}
 			} else {
 
-				StartDebugger(ApplicationTypes.DesktopApplication, target, outputDirectory, local, framework, arguments, null, workingDirectory, ipAddress, ports);
+				await StartDebugger(ApplicationTypes.DesktopApplication, target, outputDirectory, local, framework, arguments, null, workingDirectory, ipAddress, ports, password);
 
 				if (action == "2") System.Diagnostics.Process.Start(url);
 				else if (action == "1") {
@@ -279,7 +280,7 @@ namespace MonoTools.VSExtension {
 			}
 		}
 
-		public async void StartDebugger(ApplicationTypes appType, string targetExe, string outputDir, bool local, Frameworks framework, string arguments, string url, string workingDir, string ip, string ports) {
+		public async Task StartDebugger(ApplicationTypes appType, string targetExe, string outputDir, bool local, Frameworks framework, string arguments, string url, string workingDir, string ip, string ports, string password) {
 
 			IPAddress ipadr;
 			if (!IPAddress.TryParse(ip, out ipadr)) {
@@ -287,15 +288,21 @@ namespace MonoTools.VSExtension {
 				ip = adresses.FirstOrDefault(adr => adr.AddressFamily == AddressFamily.InterNetwork)?.ToString();
 				if (ip == null) throw new ArgumentException("Remote server not found.");
 			}
-			var client = new DebugClient(appType, targetExe, Path.GetFullPath(outputDir), local, framework) {
+			var client = new DebugClient(appType, targetExe, Path.GetFullPath(outputDir), local, framework, ports, password) {
 				Arguments = arguments,
 				Url = url,
 				WorkingDirectory = workingDir
 			};
-			DebugSession session = await client.ConnectToServerAsync(ip, ports);
-			await session.TransferFilesAsync();
-			var statusmsg = await session.WaitForAnswerAsync();
-
+			DebugSession session = await client.ConnectToServerAsync(ip);
+			try {
+				await session.TransferFilesAsync();
+			} catch { throw; }
+			try {
+				var statusmsg = await session.WaitForAnswerAsync();
+				if (statusmsg is StatusMessage && ((StatusMessage)statusmsg).Command == Debugger.Library.Commands.BadPassword) {
+					throw new InvalidOperationException("Invalid debug server password.");
+				}
+			} catch { throw; }
 			consoleTask = Task.Run(async () => { // handle console output
 				try {
 					var msg = await session.WaitForAnswerAsync();
@@ -307,7 +314,7 @@ namespace MonoTools.VSExtension {
 				} catch { }
 			});
 
-			IntPtr pInfo = GetDebugInfo(ip, Path.GetFileName(targetExe), outputDir);
+			IntPtr pInfo = GetDebugInfo($"{ip}:{client.DebuggerPort}", Path.GetFileName(targetExe), outputDir);
 			var sp = new ServiceProvider((IServiceProvider)dte);
 			try {
 				var dbg = (IVsDebugger)sp.GetService(typeof(SVsShellDebugger));

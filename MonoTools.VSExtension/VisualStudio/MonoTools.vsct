@@ -175,6 +175,13 @@
 				</Strings>
 			</Button>
 
+			<Button guid="GuidMonoToolsCmdSet" id="SetupServerID" priority="0x0100" type="Button">
+				<Parent guid="GuidMonoToolsCmdSet" id="HelpGroup" />
+				<Strings>
+					<ButtonText>Setup Debug Server...</ButtonText>
+				</Strings>
+			</Button>
+
 			<Button guid="GuidMonoToolsCmdSet" id="HelpID" priority="0x0100" type="Button">
 				<Parent guid="GuidMonoToolsCmdSet" id="HelpGroup" />
 				<Strings>
@@ -185,10 +192,10 @@
 		</Buttons>
 
 		<Bitmaps>
-			<Bitmap guid="BuildProjectIcon" href="Resources\buildproject.png" usedList="Icon" />
-			<Bitmap guid="BuildSolutionIcon" href="Resources\buildsolution.png" usedList="Icon" />
-			<Bitmap guid="StartIcon" href="Resources\startwithoutdebugging.png" usedList="Icon" />
-			<Bitmap guid="DebugIcon" href="Resources\start.png" usedList="Icon" />
+			<Bitmap guid="BuildProjectIcon" href="..\Resources\buildproject.png" usedList="Icon" />
+			<Bitmap guid="BuildSolutionIcon" href="..\Resources\buildsolution.png" usedList="Icon" />
+			<Bitmap guid="StartIcon" href="..\Resources\startwithoutdebugging.png" usedList="Icon" />
+			<Bitmap guid="DebugIcon" href="..\Resources\start.png" usedList="Icon" />
 			<!--<Bitmap guid="StopIcon" href="Resources\stop.png" usedList="Icon" />-->
 		</Bitmaps>
 
@@ -221,10 +228,10 @@
 			<IDSymbol name="AddPdb2MdbToProjectID" value="0x0104" />
 			<IDSymbol name="StartMonoID" value="0x0105" />
 			<IDSymbol name="DebugMonoID" value="0x0106" />
-			<IDSymbol name="DebugMonoRemoteID" value="0x0107" />
-			<IDSymbol name="OpenLogFileID" value="0x0108" />
-			<IDSymbol name="MoMASolutionID" value="0x0109" />
-			<IDSymbol name="MoMAProjectID" value="0x010A" />
+			<IDSymbol name="OpenLogFileID" value="0x0107" />
+			<IDSymbol name="MoMASolutionID" value="0x0108" />
+			<IDSymbol name="MoMAProjectID" value="0x0109" />
+			<IDSymbol name="SetupServerID" value="0x010A" />
 			<IDSymbol name="HelpID" value="0x010B" />
 		</GuidSymbol>
 
