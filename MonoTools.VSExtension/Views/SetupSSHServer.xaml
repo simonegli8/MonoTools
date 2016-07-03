@@ -4,10 +4,10 @@
         Title="Setup Debug Server" Height="389" Width="611" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False" FontSize="14">
 	<StackPanel Margin="10">
-		<TextBlock TextWrapping="Wrap"><Run Text="Install a debug server on a SSH enabled Linux box. Alternatively you can install the server manually with the commands:"/><LineBreak/><Italic><Run Text="wget https://github.com/simonegli8/MonoTools/releases/2.1/MonoDebuggerServerSetup.exe"/><LineBreak/><Run Text="mono MonoDebuggerServerSetup.exe"/></Italic></TextBlock>
+		<TextBlock TextWrapping="Wrap"><Run Text="Install a debug server on a SSH enabled Linux box. Alternatively you can install the server manually with the commands:"/><LineBreak/><Italic><Run Text="wget https://github.com/simonegli8/MonoTools/releases/2.1/MonoToolsServerSetup.exe"/><LineBreak/><Run Text="mono MonoToolsServerSetup.exe"/></Italic></TextBlock>
 		<StackPanel Orientation="Horizontal">
 			<StackPanel Margin="5,0">
-				<Label Margin="2,2" Content="Server SSH URL:"/>
+				<Label Margin="2,2" Content="Server URL:"/>
 				<Label Margin="2,2" Content="SSH Username:"/>
 				<Label Margin="2,2" Content="SSH Password:"/>
 				<Label Margin="2,2" Content="Debug Server Password:"/>
@@ -28,6 +28,7 @@
 		</StackPanel>
 		<StackPanel Orientation="Horizontal" Margin="0,20">
 			<Button Padding="30,5" Margin="30,5" Click="Install" Content="Install"/>
+			<Button Padding="30,5" Margin="30,5" Click="Upgrade" Content="Upgrade"/>
 			<Button Padding="30,5" Margin="30,5" Click="Cancel" Content="Cancel"/>
 		</StackPanel>
 	</StackPanel>

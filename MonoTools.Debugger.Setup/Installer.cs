@@ -18,6 +18,12 @@ namespace MonoTools.Debugger.Setup {
 		public static string Password;
 		public static string Ports;
 		public static string Home;
+		public static string SudoPassword;
+		public static bool Manual = false;
+		public static bool Upgrade = false;
+		public static bool NoSudo = false;
+		public static Setups Setup = Setups.Service;
+		public static uint Owner;
 
 		/// <summary>
 		/// Runs the current program as superuser with the supplied root password, or asks for the root password in the console, when password is omitted. 
@@ -36,7 +42,7 @@ namespace MonoTools.Debugger.Setup {
 				b.Append(a);
 				if (a.Contains(" ")) b.Append("\"");
 			}
-			b.Append($" \"-home={Home}\"");
+			b.Append($" \"-home={Home}\" -owner={Syscall.getuid()}");
 
 			var startInfo = new ProcessStartInfo("sudo", b.ToString()) {
 				WindowStyle = ProcessWindowStyle.Hidden,
@@ -54,17 +60,36 @@ namespace MonoTools.Debugger.Setup {
 			System.Environment.Exit(0);
 		}
 
+		public static void Chown(string file, bool exe = false) {
+			if (OS.IsMono && !OS.IsWindows) {
+				Syscall.chown(file, Owner, Owner);
+				if (exe || file.EndsWith(".exe") || file.EndsWith(".dll")) {
+					Syscall.chmod(file, FilePermissions.S_IRWXU | FilePermissions.S_IXGRP | FilePermissions.S_IXOTH | FilePermissions.S_IRGRP | FilePermissions.S_IROTH);
+				} else {
+					Syscall.chmod(file, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR | FilePermissions.S_IRGRP | FilePermissions.S_IROTH);
+				}
+			}
+		}
+
 		public static void SaveResxFile(string resource, string destination) {
 			destination = Path.Combine(LibPath, destination);
 			using (var src = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource))
 			using (var file = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.Write)) {
 				src.CopyTo(file);
 			}
+			Chown(destination);
 		}
 
 		public static void Unzip(Stream zipStream, string outFolder, Func<string, string> filter = null) {
+			var files = new List<string>();
 			var notifier = NotifyProgress != null ? new Action<Silversite.Services.ProgressArgs>(args => NotifyProgress(args.Progress*0.6)) : null;
-			Silversite.Services.Zip.Extract(zipStream, outFolder, filter, notifier);
+			Func<string, string> listfilter = file => {
+				file = filter(file);
+				if (file != null) files.Add(file);
+				return file;
+			};
+			Silversite.Services.Zip.Extract(zipStream, outFolder, listfilter, notifier);
+			foreach (var file in files) Chown(file);
 		}
 
 
@@ -72,44 +97,37 @@ namespace MonoTools.Debugger.Setup {
 			if (!Directory.Exists(LibPath)) Directory.CreateDirectory(LibPath);
 			var logPath = Path.Combine(LibPath, "Log");
 			if (!Directory.Exists(logPath)) Directory.CreateDirectory(logPath);
+			Chown(LibPath); Chown(logPath);
 
 			using (var zip = Assembly.GetExecutingAssembly().GetManifestResourceStream("MonoTools.Debugger.Setup.Server.zip")) {
 				Unzip(zip, LibPath);
 			}
 
 			var self = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-			File.Copy(self, Path.Combine(LibPath, "MonoDebuggerServerSetup.exe"));
-
-			if (OS.IsMono) {
-				foreach (var file in Directory.EnumerateFiles(LibPath)) {
-					if (file.EndsWith(".exe") || file.EndsWith(".dll")) {
-						Syscall.chmod(file, FilePermissions.S_IRWXU | FilePermissions.S_IXGRP | FilePermissions.S_IXOTH | FilePermissions.S_IRGRP | FilePermissions.S_IROTH);
-					} else {
-						Syscall.chmod(file, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR | FilePermissions.S_IRGRP | FilePermissions.S_IROTH);
-					}
-				}
-			}
-
+			var libself = Path.Combine(LibPath, "MonoToolsServerSetup.exe");
+			File.Copy(self, libself);
+			Chown(libself);
 		}
 
 		public static void InstallScript() {
-			const string script1 = "/usr/sbin/monodebugger";
-			var exe1 = Path.Combine(LibPath, "MonoDebuggerServer.exe");
+			const string script1 = "/usr/sbin/monotools";
+			var exe1 = Path.Combine(LibPath, "MonoToolsServer.exe");
 			File.WriteAllText(script1, $"exec mono {exe1}  $@");
-			if (OS.IsMono) Syscall.chmod(script1, FilePermissions.S_IRWXU | FilePermissions.S_IXGRP | FilePermissions.S_IXOTH | FilePermissions.S_IRGRP | FilePermissions.S_IROTH);
-			const string script2 = "/usr/sbin/monodebugger-setup";
-			var exe2 = Path.Combine(LibPath, "MonoDebuggerServerSetup.exe");
+			Chown(script1, true);
+			const string script2 = "/usr/sbin/monotools-setup";
+			var exe2 = Path.Combine(LibPath, "MonoToolsServerSetup.exe");
 			File.WriteAllText(script2, $"exec mono {exe2}  $@");
-			if (OS.IsMono) Syscall.chmod(script2, FilePermissions.S_IRWXU | FilePermissions.S_IXGRP | FilePermissions.S_IXOTH | FilePermissions.S_IRGRP | FilePermissions.S_IROTH);
+			Chown(script2, true);
 		}
 
 		public static void InstallSession() {
 			var xsession = "#! /bin/bash";
 			var xsessionfile = Path.Combine(Home, ".xsession");
-			var exe = Path.Combine(LibPath, "MonoDebuggerServer.exe");
+			var exe = Path.Combine(LibPath, "MonoToolsServer.exe");
 			if (File.Exists(xsessionfile)) {
 				xsession = File.ReadAllText(xsessionfile);
 				var ex = new Regex($"^mono {exe} .*$", RegexOptions.Multiline);
+				if (Upgrade && !ex.IsMatch(xsession)) return;
 				ex.Replace(xsession, "");
 			}
 			xsession += $"\nmono {exe}";
@@ -117,12 +135,13 @@ namespace MonoTools.Debugger.Setup {
 			if (!string.IsNullOrEmpty(Password)) xsession += $" -password={Password}";
 
 			File.WriteAllText(xsessionfile, xsession);
+			Chown(xsessionfile, true);
 		}
 
 		public enum Setups { Service, Manual, Cancel };
 
-		public static void Help(Setups setup) {
-			if (setup == Setups.Service) {
+		public static void Help() {
+			if (Setup == Setups.Service) {
 				Window.OpenDialog(@"You can now use this machine as
 a debug server with MonoTools.
 If you have set a password and custom ports, you need to set them in
@@ -130,7 +149,7 @@ the MonoTools options in VisualStudio also.
 
 <!Ok>[    Ok    ]</!Ok>
 ");
-			} else if (setup == Setups.Manual) {
+			} else if (Setup == Setups.Manual) {
 				Window.OpenDialog(@"To run the mono debug server type
 monodebugger
 in a console window.
@@ -140,13 +159,22 @@ in a console window.
 			}
 		}
 
+		public static void Configure(string[] args) {
+			Ports = args.FirstOrDefault(a => a.StartsWith("-ports="))?.Substring("-ports=".Length);
+			Password = args.FirstOrDefault(a => a.StartsWith("-password="))?.Substring("-password=".Length);
+			SudoPassword = args.FirstOrDefault(a => a.StartsWith("-sudopwd="))?.Substring("-sudopwd=".Length);
+			Upgrade = args.Any(a => a == "-upgrade");
+			Manual = args.Any(a => a == "-manual") && !Upgrade;
+			NoSudo = args.Any(a => a == "-nosudo") || Upgrade;
+			Home = args.FirstOrDefault(a => a.StartsWith("-home="))?.Substring("-home=".Length) ?? Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			if (Manual) Setup = Setups.Manual;
+		}
 
-		public static void Install(string password = null, string ports = null, Setups setup = Setups.Service, string home = null, string sudopwd = null) {
-			Home = home;
+		public static void Install() {
 
-			Sudo(sudopwd);
+			Sudo(SudoPassword);
 
-			if (password == null && ports == null) {
+			if (Password == null && Ports == null) {
 				var win = Window.OpenDialog(@"MonoTools Debugger Server Setup
 ===============================
 
@@ -162,18 +190,15 @@ in a console window.
 ", new { Password = "", Ports = "" });
 				Ports = win.Ports.Value;
 				Password = win.Password.Value;
-				if (win.Service.Selected) setup = Setups.Service;
-				else if (win.Manual.Selected) setup = Setups.Manual;
-				else setup = Setups.Cancel;
-			} else {
-				Ports = ports;
-				Password = password;
+				if (win.Service.Selected) Setup = Setups.Service;
+				else if (win.Manual.Selected) Setup = Setups.Manual;
+				else Setup = Setups.Cancel;
 			}
-			if (setup == Setups.Cancel) return;
+			if (Setup == Setups.Cancel) return;
 			InstallZip();
 			InstallScript();
-			if (setup == Setups.Service) InstallSession();
-			Help(setup);
+			if (Setup == Setups.Service) InstallSession();
+			Help();
 		}
 	}
 }

@@ -7,10 +7,12 @@ namespace MonoTools.Debugger.Library {
 
 		private readonly string _targetExe;
 		string arguments;
+		bool debug;
 
-		public MonoDesktopProcess(string targetExe, string arguments) {
+		public MonoDesktopProcess(string targetExe, string arguments, bool debug) {
 			_targetExe = targetExe;
 			this.arguments = arguments;
+			this.debug = debug;
 		}
 
 		internal override Process Start(string workingDirectory) {
@@ -18,7 +20,7 @@ namespace MonoTools.Debugger.Library {
 
 			if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
 
-			string args = GetProcessArgs();
+			string args = GetProcessArgs(debug);
 			ProcessStartInfo procInfo = GetProcessStartInfo(workingDirectory, monoBin);
 			procInfo.Arguments = args + " \"" + _targetExe + "\"";
 			if (!string.IsNullOrEmpty(arguments)) procInfo.Arguments += " " + arguments;

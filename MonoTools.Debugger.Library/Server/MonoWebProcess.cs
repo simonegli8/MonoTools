@@ -11,8 +11,9 @@ namespace MonoTools.Debugger.Library {
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 		public string Url { get; private set; }
 		Frameworks Framework { get; set; } = Frameworks.Net4;
+		bool debug;
 
-		public MonoWebProcess(Frameworks framework = Frameworks.Net4, string url = null) { Framework = framework; Url = url; RedirectOutput = true; }
+		public MonoWebProcess(Frameworks framework, string url, bool debug) { Framework = framework; Url = url; RedirectOutput = true; this.debug = debug; }
 
 		public static string SSLXpsArguments() {
 			var a = Assembly.GetExecutingAssembly();
@@ -32,7 +33,7 @@ namespace MonoTools.Debugger.Library {
 
 		internal override Process Start(string workingDirectory) {
 			string monoBin = MonoUtils.GetMonoXsp(Framework);
-			string args = GetProcessArgs();
+			string args = GetProcessArgs(debug);
 
 			if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
 

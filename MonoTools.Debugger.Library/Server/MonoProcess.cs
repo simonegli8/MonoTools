@@ -21,13 +21,10 @@ namespace MonoTools.Debugger.Library {
 				handler(this, EventArgs.Empty);
 		}
 
-		protected string GetProcessArgs() {
+		protected string GetProcessArgs(bool debug) {
 			//IPAddress ip = GetLocalIp();
 			IPAddress ip = IPAddress.Any;
-			string args =
-				 string.Format(
-					  @"--debugger-agent=address={0}:{1},transport=dt_socket,server=y --debug=mdb-optimizations", ip, DebuggerPort);
-			return args;
+			return debug ? $"--debugger-agent=address={ip}:{DebuggerPort},transport=dt_socket,server=y --debug=mdb-optimizations" : "";
 		}
 
 		protected ProcessStartInfo GetProcessStartInfo(string workingDirectory, string monoBin) {
@@ -49,11 +46,11 @@ namespace MonoTools.Debugger.Library {
 			return IPAddress.Parse("127.0.0.1");
 		}
 
-		internal static MonoProcess Start(ApplicationTypes type, string targetExe, Frameworks framework, string arguments, string url) {
+		internal static MonoProcess Start(ApplicationTypes type, string targetExe, Frameworks framework, string arguments, string url, bool debug) {
 			if (type == ApplicationTypes.DesktopApplication)
-				return new MonoDesktopProcess(targetExe, arguments);
+				return new MonoDesktopProcess(targetExe, arguments, debug);
 			if (type == ApplicationTypes.WebApplication)
-				return new MonoWebProcess(framework, url);
+				return new MonoWebProcess(framework, url, debug);
 
 			throw new Exception("Unknown ApplicationType");
 		}

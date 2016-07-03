@@ -43,29 +43,33 @@ namespace MonoTools.Debugger.Library {
 			try {
 				logger.Trace("New Session from {0}", remoteEndpoint?.ToString() ?? "localhost");
 
+
 				while (communication.IsConnected) {
 					if (process != null && process.HasExited)
 						return;
+
+					communication.SendAsync(new StatusMessage { Command = Commands.Info });
 
 					var msg = communication.Receive<CommandMessage>();
 
 					if (msg == null) return;
 
 					switch (msg.Command) {
-					case Commands.DebugContent:
-						var dbg = msg as DebugMessage;
+					case Commands.Execute:
+						var dbg = msg as ExecuteMessage;
 						if (dbg != null) {
 							if (!dbg.CheckSecurityToken(communication)) {
-								communication.Send(new StatusMessage { Command = Commands.BadPassword });
+								communication.SendAsync(new StatusMessage { Command = Commands.InvalidPassword });
 #if !DEBUG
 								logger.Error("Wait one minute after invalid password failure.");
 								System.Threading.Thread.Sleep(TimeSpan.FromMinutes(1));
 #endif
 							} else {
-								StartDebugging(dbg);
+								StartExecuting(dbg);
 							}
 						}
 						break;
+					case Commands.Info: return;
 					case Commands.Shutdown:
 						logger.Trace("Shutdown-Message received");
 						return;
@@ -79,7 +83,7 @@ namespace MonoTools.Debugger.Library {
 			}
 		}
 
-		private void StartDebugging(DebugMessage msg) {
+		private void StartExecuting(ExecuteMessage msg) {
 
 			targetExe = msg.Executable;
 
@@ -93,17 +97,17 @@ namespace MonoTools.Debugger.Library {
 				generator.GeneratePdb2Mdb(binaryDirectory);
 			}
 
-			StartMono(msg.ApplicationType, msg.Framework, msg.Arguments, msg.WorkingDirectory, msg.Url);
+			StartMono(msg.ApplicationType, msg.Framework, msg.Arguments, msg.WorkingDirectory, msg.Url, msg.Debug);
 		}
 
-		private void StartMono(ApplicationTypes type, Frameworks framework, string arguments, string workingDirectory, string url) {
+		private void StartMono(ApplicationTypes type, Frameworks framework, string arguments, string workingDirectory, string url, bool debug) {
 			if (OS.IsMono) {
 				Console.BackgroundColor = ConsoleColor.Black;
 				Console.Clear();
 			}
 			MonoDebugServer.Current.SuspendCancelKey();
 
-			MonoProcess proc = MonoProcess.Start(type, targetExe, framework, arguments, url);
+			MonoProcess proc = MonoProcess.Start(type, targetExe, framework, arguments, url, debug);
 			proc.DebuggerPort = DebuggerPort;
 			workingDirectory = string.IsNullOrEmpty(workingDirectory) ? rootPath : workingDirectory;
 			proc.ProcessStarted += MonoProcessStarted;
@@ -119,7 +123,7 @@ namespace MonoTools.Debugger.Library {
 			lock (this) {
 				if (!startedSent) {
 					startedSent = true;
-					communication.Send(new StatusMessage() { Command = Commands.StartedMono });
+					communication.SendAsync(new StatusMessage() { Command = Commands.Started });
 				}
 			}
 		}
@@ -127,7 +131,7 @@ namespace MonoTools.Debugger.Library {
 		private void SendOutput(string text) {
 			EnsureSentStarted();
 			logger.Info(text);
-			if (text != null) lock (communication) communication.Send(new ConsoleOutputMessage() { Text = text });
+			if (text != null) lock (communication) communication.SendAsync(new ConsoleOutputMessage() { Text = text });
 		}
 
 		private void MonoProcessStarted(object sender, EventArgs e) {

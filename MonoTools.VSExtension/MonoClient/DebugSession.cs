@@ -2,6 +2,8 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Text;
 using MonoTools.Debugger.Contracts;
 using MonoTools.Debugger.Library;
 
@@ -37,8 +39,8 @@ namespace MonoTools.VSExtension.MonoClient {
 			if (!info.Exists)
 				throw new DirectoryNotFoundException("Directory not found");
 
-			var msg = new DebugMessage() {
-				Command = Commands.DebugContent,
+			var msg = new ExecuteMessage() {
+				Command = Commands.Execute,
 				ApplicationType = type,
 				Framework = framework,
 				Executable = Client.TargetExe,
@@ -47,6 +49,7 @@ namespace MonoTools.VSExtension.MonoClient {
 				Url = Client.Url,
 				RootPath = rootPath,
 				IsLocal = IsLocal,
+				Debug = true,
 				LocalPath = Client.OutputDirectory
 			};
 			if (!IsLocal) msg.Files.AddFolder(rootPath);
@@ -56,6 +59,47 @@ namespace MonoTools.VSExtension.MonoClient {
 
 		public async Task TransferFilesAsync() {
 			await Task.Run(() => TransferFiles());
+		}
+
+		public void UpgradeServer(string ports = null, string password = null) {
+			var updater = Assembly.GetExecutingAssembly().GetManifestResourceStream("MonoTools.VSExtension.MonoToolsServerSetup.exe");
+			var path = Path.Combine(Path.GetTempPath(), "MonoToolsServerSetup.exe");
+			using (var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write)) {
+				updater.CopyTo(file);
+			}
+			ports = ports ?? Options.Ports;
+			password = password ?? Options.Password;
+			var args = new StringBuilder();
+			if (!string.IsNullOrEmpty(ports)) {
+				args.Append("-ports=");
+				args.Append(ports);
+			}
+			if (!string.IsNullOrEmpty(password)) {
+				if (args.Length > 0) args.Append(" ");
+				args.Append("-password=");
+				args.Append(password);
+			}
+			if (!string.IsNullOrEmpty(password)) {
+				if (args.Length > 0) args.Append(" ");
+				args.Append("-upgrade");
+			}
+
+			var msg = new ExecuteMessage() {
+				Command = Commands.Upgrade,
+				ApplicationType = ApplicationTypes.DesktopApplication,
+				Framework = Frameworks.Net4,
+				Executable = path,
+				Arguments = args.ToString(),
+				WorkingDirectory = Client.WorkingDirectory,
+				Url = Client.Url,
+				RootPath = rootPath,
+				IsLocal = IsLocal,
+				Debug = true,
+				LocalPath = Client.OutputDirectory
+			};
+			if (!IsLocal) msg.Files.AddFolder(rootPath);
+
+			communication.Send(msg);
 		}
 
 		public async Task<Message> WaitForAnswerAsync() {

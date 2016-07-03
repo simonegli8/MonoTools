@@ -17,9 +17,11 @@ namespace MonoTools.VSExtension {
 
 		private readonly DTE2 dte;
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		public static Services Current { get; private set; }
 
 		public Services(DTE dte) {
 			this.dte = (DTE2)dte;
+			Current = this;
 		}
 
 		internal void BuildSolution() {

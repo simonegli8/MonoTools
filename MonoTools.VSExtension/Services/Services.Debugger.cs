@@ -298,7 +298,7 @@ namespace MonoTools.VSExtension {
 			} catch { throw; }
 			try {
 				var statusmsg = await session.WaitForAnswerAsync();
-				if (statusmsg is StatusMessage && ((StatusMessage)statusmsg).Command == Debugger.Library.Commands.BadPassword) {
+				if (statusmsg is StatusMessage && ((StatusMessage)statusmsg).Command == Debugger.Library.Commands.InvalidPassword) {
 					throw new InvalidOperationException("Invalid debug server password.");
 				}
 			} catch { throw; }

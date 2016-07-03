@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Linq;
 using System.Net;
@@ -171,7 +172,7 @@ namespace MonoTools.Debugger.Library {
 	}
 
 	public enum ApplicationTypes { DesktopApplication, WebApplication }
-	public enum Commands : byte { DebugContent, StartedMono, Shutdown, BadPassword }
+	public enum Commands : byte { Execute, Started, Shutdown, InvalidPassword, Upgrade, Info }
 	public enum Frameworks { Net2, Net4 }
 
 	[Serializable]
@@ -193,7 +194,7 @@ namespace MonoTools.Debugger.Library {
 	}
 
 	[Serializable]
-	public class DebugMessage : CommandMessage, IMessageWithFiles, IExtendedMessage {
+	public class ExecuteMessage : CommandMessage, IMessageWithFiles, IExtendedMessage {
 		public ApplicationTypes ApplicationType { get; set; }
 		public Frameworks Framework { get; set; }
 		public string Executable { get; set; }
@@ -204,6 +205,7 @@ namespace MonoTools.Debugger.Library {
 		public string LocalPath { get; set; }
 		public bool HasMdbs => Files.HasMdbs;
 		public string SecurityToken { get; set; }
+		public bool Debug { get; set; }
 		public string RootPath { get { return Files.RootPath; } set { Files.RootPath = value; } }
 		public FilesCollection Files { get; protected set; } = new FilesCollection();
 		public void Send(TcpCommunication con) {
@@ -260,7 +262,12 @@ namespace MonoTools.Debugger.Library {
 	}
 
 	[Serializable]
-	public class StatusMessage : CommandMessage { }
+	public class StatusMessage : CommandMessage {
+		public Version Version;
+		public StatusMessage() {
+			Version = Assembly.GetEntryAssembly().GetName().Version;
+		}
+	}
 
 	[Serializable]
 	public class ConsoleOutputMessage : Message {

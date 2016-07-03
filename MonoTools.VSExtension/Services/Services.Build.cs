@@ -77,6 +77,10 @@ namespace MonoTools.VSExtension {
 				proc.Start();
 				proc.BeginOutputReadLine();
 
+				proc.WaitForExit();
+
+				while (!proc.HasExited) System.Threading.Thread.Sleep(10);
+
 				// XBuild returned with error, stop processing XBuild Command
 				if (proc.ExitCode != 0) {
 					MarkErrors(text.ToString());
@@ -148,6 +152,8 @@ namespace MonoTools.VSExtension {
 						proc.BeginOutputReadLine();
 
 						proc.WaitForExit();
+
+						while (!proc.HasExited) System.Threading.Thread.Sleep(10);
 
 						if (proc.ExitCode > 0) MarkErrors(text.ToString());
 						else {

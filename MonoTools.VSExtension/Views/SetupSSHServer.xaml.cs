@@ -27,12 +27,22 @@ namespace MonoTools.VSExtension.Views {
 			Options.Settings.Save();
 			base.OnClosing(e);
 		}
+
 		private void Install(object sender, RoutedEventArgs e) {
+			Services.Current.ServerSetup(Url.Text, Username.Text, Password.Password, DebugPassword.Password, Ports.Text, Manual.IsChecked.GetValueOrDefault());
 			DialogResult = true;
+			Close();
+		}
+
+		private async void Upgrade(object sender, RoutedEventArgs e) {
+			await Services.Current.ServerUpgrade(Url.Text, Ports.Text, Password.Password);
+			DialogResult = true;
+			Close();
 		}
 
 		private void Cancel(object sender, RoutedEventArgs e) {
 			DialogResult = false;
+			Close();
 		}
 	}
 }
