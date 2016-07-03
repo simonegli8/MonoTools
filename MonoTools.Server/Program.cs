@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using MonoTools.Debugger.Library;
+using MonoTools.Library;
 
-namespace MonoTools.Debugger.Server {
+namespace MonoTools.Server {
 
 	public class Program {
 
@@ -25,10 +25,11 @@ the password in the MonoTools VisualStudio options.");
 
 			var ports = args.FirstOrDefault(a => a.StartsWith("-ports="))?.Substring("-ports=".Length);
 			var password = args.FirstOrDefault(a => a.StartsWith("-password="))?.Substring("-password=".Length);
+			var terminalTemplate = args.FirstOrDefault(a => a.StartsWith("-termtempl="))?.Substring("-termtempl=".Length);
 
 			MonoLogger.Setup();
 
-			using (var server = new MonoDebugServer(false, ports, password)) {
+			using (var server = new MonoDebugServer(false, ports, password, terminalTemplate)) {
 				server.StartAnnouncing();
 				server.Start();
 				server.WaitForExit();

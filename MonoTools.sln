@@ -9,13 +9,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		CHANGELOG.md = CHANGELOG.md
 		LICENSE.txt = LICENSE.txt
 		README.md = README.md
-		MonoTools.VSExtension\sn.pfx = MonoTools.VSExtension\sn.pfx
+		MonoTools.VisualStudio\sn.pfx = MonoTools.VisualStudio\sn.pfx
 		VersionInfo.cs = VersionInfo.cs
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Debugger.Server", "MonoTools.Server\MonoTools.Debugger.Server.csproj", "{134655A3-EF22-4E4A-AE8D-9EE1282733A7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Debugger.Library", "MonoTools.Debugger.Library\MonoTools.Debugger.Library.csproj", "{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Server", "MonoTools.Server\MonoTools.Server.csproj", "{134655A3-EF22-4E4A-AE8D-9EE1282733A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Debugger", "MonoTools.Debugger\MonoTools.Debugger.csproj", "{C99840F2-29F7-44FC-A152-3CDD7FC41B21}"
 EndProject
@@ -23,16 +21,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assemblies", "Assemblies", 
 	ProjectSection(SolutionItems) = preProject
 		Assemblies\Microsoft.DebugEngineHost.dll = Assemblies\Microsoft.DebugEngineHost.dll
 		Assemblies\Microsoft.MICore.dll = Assemblies\Microsoft.MICore.dll
-		Assemblies\Mono.Cecil.dll = Assemblies\Mono.Cecil.dll
-		Assemblies\Mono.Debugger.Soft.dll = Assemblies\Mono.Debugger.Soft.dll
 		Assemblies\Techl.dll = Assemblies\Techl.dll
+		Assemblies\Techl.Mono.Cecil.dll = Assemblies\Techl.Mono.Cecil.dll
+		Assemblies\Techl.Mono.Debugger.Soft.dll = Assemblies\Techl.Mono.Debugger.Soft.dll
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Pdb2Mdb", "MonoTools.Pdb2mdb\MonoTools.Pdb2Mdb.csproj", "{7EF3C263-1B7C-4901-8B9C-04350CF446C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Debugger.Setup", "MonoTools.Debugger.Setup\MonoTools.Debugger.Setup.csproj", "{58EACD05-33EA-4E45-80B2-DC9543021FB3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Library", "MonoTools.Library\MonoTools.Library.csproj", "{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.VSExtension", "MonoTools.VSExtension\MonoTools.VSExtension.csproj", "{7A273453-436B-4226-BCD4-9D02687944A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.Server.Setup", "MonoTools.Server.Setup\MonoTools.Server.Setup.csproj", "{58EACD05-33EA-4E45-80B2-DC9543021FB3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTools.VisualStudio", "MonoTools.VisualStudio\MonoTools.VisualStudio.csproj", "{7A273453-436B-4226-BCD4-9D02687944A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,14 +50,6 @@ Global
 		{134655A3-EF22-4E4A-AE8D-9EE1282733A7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{134655A3-EF22-4E4A-AE8D-9EE1282733A7}.Release|x64.ActiveCfg = Release|x64
 		{134655A3-EF22-4E4A-AE8D-9EE1282733A7}.Release|x64.Build.0 = Release|x64
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|x64.ActiveCfg = Debug|x64
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|x64.Build.0 = Debug|x64
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|x64.ActiveCfg = Release|x64
-		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|x64.Build.0 = Release|x64
 		{C99840F2-29F7-44FC-A152-3CDD7FC41B21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C99840F2-29F7-44FC-A152-3CDD7FC41B21}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C99840F2-29F7-44FC-A152-3CDD7FC41B21}.Debug|x64.ActiveCfg = Debug|x64
@@ -74,6 +66,14 @@ Global
 		{7EF3C263-1B7C-4901-8B9C-04350CF446C0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7EF3C263-1B7C-4901-8B9C-04350CF446C0}.Release|x64.ActiveCfg = Release|Any CPU
 		{7EF3C263-1B7C-4901-8B9C-04350CF446C0}.Release|x64.Build.0 = Release|Any CPU
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|x64.ActiveCfg = Debug|x64
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Debug|x64.Build.0 = Debug|x64
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|x64.ActiveCfg = Release|x64
+		{FE76AEE5-C4E3-45ED-AA18-29DF82AB405C}.Release|x64.Build.0 = Release|x64
 		{58EACD05-33EA-4E45-80B2-DC9543021FB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{58EACD05-33EA-4E45-80B2-DC9543021FB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58EACD05-33EA-4E45-80B2-DC9543021FB3}.Debug|x64.ActiveCfg = Debug|Any CPU

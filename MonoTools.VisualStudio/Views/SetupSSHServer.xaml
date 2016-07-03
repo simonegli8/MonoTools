@@ -1,0 +1,35 @@
+﻿<Window x:Class="MonoTools.VisualStudio.Views.SetupSSHServer"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Setup Debug Server" Height="389" Width="611" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" FontSize="14">
+	<StackPanel Margin="10">
+		<TextBlock TextWrapping="Wrap"><Run Text="Install a debug server on a SSH enabled Linux box. Alternatively you can install the server manually with the commands:"/><LineBreak/><Italic><Run Text="wget https://github.com/simonegli8/MonoTools/releases/2.1/MonoToolsServerSetup.exe"/><LineBreak/><Run Text="mono MonoToolsServerSetup.exe"/></Italic></TextBlock>
+		<StackPanel Orientation="Horizontal">
+			<StackPanel Margin="5,0">
+				<Label Margin="2,2" Content="Server URL:"/>
+				<Label Margin="2,2" Content="SSH Username:"/>
+				<Label Margin="2,2" Content="SSH Password:"/>
+				<Label Margin="2,2" Content="Debug Server Password:"/>
+				<Label Margin="2,2" Content="Debug Server Ports:"/>
+				<Label Margin="2,2" Content="Installation:"/>
+			</StackPanel>
+			<StackPanel>
+				<TextBox x:Name="Url" Width="370" Margin="2,6"/>
+				<TextBox x:Name="Username" Width="370" Margin="2,6"/>
+				<PasswordBox x:Name="Password" Width="370" Margin="2,6" PasswordChar="&#x2022;" />
+				<PasswordBox x:Name="DebugPassword" Width="370" Margin="2,6" PasswordChar="&#x2022;"/>
+				<TextBox x:Name="Ports" Width="370" Margin="2,6"/>
+				<StackPanel  Margin="2,6" Orientation="Horizontal">
+					<RadioButton x:Name="Service" GroupName="Install" Margin="7,0" Content="As Service" IsChecked="True"/>
+					<RadioButton x:Name="Manual" GroupName="Install" Margin="7,0" Content="Manual"/>
+				</StackPanel>
+			</StackPanel>
+		</StackPanel>
+		<StackPanel Orientation="Horizontal" Margin="0,20">
+			<Button Padding="30,5" Margin="30,5" Click="Install" Content="Install"/>
+			<Button Padding="30,5" Margin="30,5" Click="Upgrade" Content="Upgrade"/>
+			<Button Padding="30,5" Margin="30,5" Click="Cancel" Content="Cancel"/>
+		</StackPanel>
+	</StackPanel>
+</Window>
