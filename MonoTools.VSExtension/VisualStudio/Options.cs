@@ -7,6 +7,7 @@ using EnvDTE;
 using EnvDTE80;
 
 namespace MonoTools.VSExtension {
+
 	public static class Options {
 
 		static Properties properties;
@@ -19,5 +20,6 @@ namespace MonoTools.VSExtension {
 		public static string Ports => (string)properties.Item("MonoDebuggerPorts").Value;
 		public static string Password => (string)properties.Item("MonoDebuggerPassword").Value;
 		public static string MonoPath => (string)properties.Item("MonoInstallationPath").Value;
+		public static UserSettings Settings => UserSettingsManager.Current;
 	}
 }

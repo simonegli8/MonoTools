@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 
 namespace MonoTools.VSExtension.Views {
 	/// <summary>
@@ -11,8 +12,21 @@ namespace MonoTools.VSExtension.Views {
 			WindowStartupLocation = WindowStartupLocation.CenterOwner;
 			Ports.Text = Options.Ports;
 			DebugPassword.Password = Options.Password;
+			Url.Text = Options.Settings.LastSSHUrl;
+			Username.Text = Options.Settings.LastSSHUser;
+			Password.Password = Options.Settings.LastSSHPassword;
+			Manual.IsChecked = Options.Settings.LastSetupManualOption.GetValueOrDefault();
+			Service.IsChecked = !Manual.IsChecked;
 		}
 
+		protected override void OnClosing(CancelEventArgs e) {
+			Options.Settings.LastSSHUrl = Url.Text;
+			Options.Settings.LastSSHUser = Username.Text;
+			Options.Settings.LastSSHPassword = Password.Password;
+			Options.Settings.LastSetupManualOption = Manual.IsChecked.GetValueOrDefault();
+			Options.Settings.Save();
+			base.OnClosing(e);
+		}
 		private void Install(object sender, RoutedEventArgs e) {
 			DialogResult = true;
 		}

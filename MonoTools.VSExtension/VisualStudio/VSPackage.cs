@@ -17,7 +17,6 @@ using Microsoft.Win32;
 using MonoTools.Debugger.Library;
 using MonoTools.Debugger;
 using MonoTools.Debugger.VisualStudio;
-using MonoTools.VSExtension.Settings;
 using NLog;
 using Process = System.Diagnostics.Process;
 using Microsoft.MIDebugEngine;
