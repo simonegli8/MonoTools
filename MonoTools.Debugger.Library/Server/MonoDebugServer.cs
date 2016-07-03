@@ -49,22 +49,29 @@ namespace MonoTools.Debugger.Library {
 			ParsePorts(ports, out MessagePort, out DebuggerPort, out DiscoveryPort);
 			Password = password;
 			if (!string.IsNullOrEmpty(Password)) logger.Info("Password protected");
+			Current = this;
 		}
 
 		public void Dispose() {
 			Stop();
 		}
 
+		public static MonoDebugServer Current { get; private set; }
+
 		public void Start() {
+			Current = this;
 			if (!IsLocal) {
 				tcp = new TcpListener(IPAddress.Any, MessagePort);
 				tcp.Start();
 			}
+			ListenForCancelKey();
 			listeningTask = Task.Run(() => StartListening(cts.Token), cts.Token);
 		}
 
-		public void ListenForReturnKey() {
-			Task.Run(() => {
+		private CancellationTokenSource consoleCancellationToken = new CancellationTokenSource();
+
+		public void ListenForCancelKey() {
+			Task.Run((Action)(() => {
 				while (true) {
 					bool doSleep;
 					try {
@@ -83,7 +90,16 @@ namespace MonoTools.Debugger.Library {
 				}
 				Stop();
 				Environment.Exit(0);
-			});
+			}), consoleCancellationToken.Token);
+		}
+
+		public void SuspendCancelKey() {
+			consoleCancellationToken.Cancel();
+		}
+
+		public void ResumeCancelKey() {
+			consoleCancellationToken = new CancellationTokenSource();
+			ListenForCancelKey();
 		}
 
 		private void StartListening(CancellationToken token) {

@@ -101,6 +101,8 @@ namespace MonoTools.Debugger.Library {
 				Console.BackgroundColor = ConsoleColor.Black;
 				Console.Clear();
 			}
+			MonoDebugServer.Current.SuspendCancelKey();
+
 			MonoProcess proc = MonoProcess.Start(type, targetExe, framework, arguments, url);
 			proc.DebuggerPort = DebuggerPort;
 			workingDirectory = string.IsNullOrEmpty(workingDirectory) ? rootPath : workingDirectory;
@@ -141,6 +143,7 @@ namespace MonoTools.Debugger.Library {
 			} catch (Exception ex) {
 				logger.Trace("Cant delete {0} - {1}", rootPath, ex.Message);
 			}
+			MonoDebugServer.Current.ResumeCancelKey();
 		}
 	}
 }

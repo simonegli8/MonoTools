@@ -10,11 +10,15 @@ namespace MonoTools.VSExtension {
 		private static readonly UserSettingsManager manager = new UserSettingsManager();
 		private WritableSettingsStore store;
 
-		public static UserSettings Current { get; set; }
-
-		private UserSettingsManager() {
-			if (manager == null) Current = Load();
+		static UserSettings current = null;
+		public static UserSettings Current {
+			get {
+				if (current == null) current = Instance.Load();
+				return current;
+			}
 		}
+
+		private UserSettingsManager() { }
 
 		public static UserSettingsManager Instance {
 			get { return manager; }

@@ -30,7 +30,6 @@ the password in the MonoTools VisualStudio options.");
 
 			using (var server = new MonoDebugServer(false, ports, password)) {
 				server.StartAnnouncing();
-				server.ListenForReturnKey();
 				server.Start();
 				server.WaitForExit();
 			}

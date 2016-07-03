@@ -33,6 +33,7 @@ namespace MonoTools.Debugger.Library {
 			} else {
 				procInfo.UseShellExecute = true;
 			}
+
 			process.Start();
 
 			RaiseProcessStarted();
