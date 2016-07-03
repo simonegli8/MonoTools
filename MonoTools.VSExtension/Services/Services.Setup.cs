@@ -17,7 +17,7 @@ namespace MonoTools.VSExtension {
 
 				if (dlg.ShowDialog().GetValueOrDefault()) {
 
-					await ServerSetup(dlg.Url.Text, dlg.Username.Text, dlg.Password.Text, dlg.DebugPassword.Text, dlg.Ports.Text, dlg.Manual.IsChecked.GetValueOrDefault());
+					await ServerSetup(dlg.Url.Text, dlg.Username.Text, dlg.Password.Password, dlg.DebugPassword.Password, dlg.Ports.Text, dlg.Manual.IsChecked.GetValueOrDefault());
 				}
 			} catch (Exception ex) {
 				logger.Error<Exception>(ex);
@@ -30,11 +30,11 @@ namespace MonoTools.VSExtension {
 
 				var setup = Assembly.GetExecutingAssembly().GetManifestResourceStream("MonoTools.VSExtension.MonoDebuggerServerSetup.exe");
 				ssh.Sftp.UploadFile(setup, "MonoDebuggerSetup.exe");
-				var args = "";
+				var args = $"-sudopwd={password}";
 				if (!string.IsNullOrEmpty(ports)) args += $" -ports={ports}";
 				if (!string.IsNullOrEmpty(debugPassword)) args += $" -password={debugPassword}";
 				if (manual) args += " -manual";
-				ssh.Ssh.RunCommand($"mono MonoDebuggerServerSetup.exe{args}");
+				ssh.Ssh.RunCommand($"mono MonoDebuggerServerSetup.exe {args}");
 			}
 
 		}

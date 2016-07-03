@@ -25,7 +25,7 @@ using Microsoft.MIDebugEngine;
 namespace MonoTools.VSExtension {
 
 	[PackageRegistration(UseManagedResourcesOnly = true)]
-	[InstalledProductRegistration("#110", "#112", Application.Version, IconResourceID = 400)]
+	[InstalledProductRegistration("#110", "#112", App.Version, IconResourceID = 400)]
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[ProvideAutoLoad(Microsoft.VisualStudio.VSConstants.UICONTEXT.SolutionExists_string)]
 	[ProvideOptionPage(typeof(MonoToolsOptionsDialogPage), "MonoTools", "General", 0, 0, true)]
@@ -47,6 +47,7 @@ namespace MonoTools.VSExtension {
 
 			ErrorsWindow.Initialize(this);
 			StatusBarProgress.Initialize(this);
+			Options.Initialize(this);
 
 			/* Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary {
 				Source = new Uri("/MonoTools;component/Resources/Resources.xaml", UriKind.Relative)

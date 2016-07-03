@@ -11,7 +11,7 @@ namespace MonoTools.Debugger.Server {
 			Console.BackgroundColor = ConsoleColor.DarkBlue;
 			Console.Clear();
 
-			Console.WriteLine($"MonoDebugger {Application.Version}, © johnshope.com. Pass ? for help.");
+			Console.WriteLine($"MonoDebugger {App.Version}, © johnshope.com. Pass ? for help. Press Return to exit.");
 
 			if (args.Any(a => a.Contains("help") || a.Contains("?"))) {
 				Console.WriteLine(@"usage: mono MonoDebugger.exe [-ports=message-port,debugger-port,discovery-port] [-password=server-password]
@@ -30,8 +30,8 @@ the password in the MonoTools VisualStudio options.");
 
 			using (var server = new MonoDebugServer(false, ports, password)) {
 				server.StartAnnouncing();
+				server.ListenForReturnKey();
 				server.Start();
-
 				server.WaitForExit();
 			}
 		}

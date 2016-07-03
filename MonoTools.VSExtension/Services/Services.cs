@@ -58,8 +58,7 @@ namespace MonoTools.VSExtension {
 		private string DetermineMonoPath() {
 			OutputWindowPane outputWindowPane = PrepareOutputWindowPane();
 
-			Properties monoHelperProperties = dte.Properties["MonoTools", "General"];
-			string monoPath = (string)monoHelperProperties.Item("MonoInstallationPath").Value;
+			var monoPath = Options.MonoPath;
 
 			if (!string.IsNullOrEmpty(monoPath)) {
 				//outputWindowPane.OutputString("MonoTools: Mono Installation Path is set.\r\n");
@@ -158,9 +157,7 @@ namespace MonoTools.VSExtension {
 			outputWindowPane.Activate();
 
 			outputWindowPane.Clear();
-			outputWindowPane.OutputString($"MonoTools, Version {Application.Version}\r\n");
-			outputWindowPane.OutputString("Copyright © Christopher Dresel,  BongHo Lee, Simon Egli, Giesswein-Apps, Techl, johnshope.com 2016\r\n");
-			outputWindowPane.OutputString("\r\n");
+			outputWindowPane.OutputString($"MonoTools {App.Version}, © johnshope.com 2016\r\n");
 
 			return outputWindowPane;
 		}

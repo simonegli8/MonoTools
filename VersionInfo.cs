@@ -13,6 +13,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2.1.0")]
 [assembly: AssemblyFileVersion("2.1.0.0")]
 
-public static class Application {
+public static class App {
 	public const string Version = "2.1";
 }

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 using NLog;
 
 namespace MonoTools.Debugger.Library {
@@ -59,13 +60,36 @@ namespace MonoTools.Debugger.Library {
 				tcp = new TcpListener(IPAddress.Any, MessagePort);
 				tcp.Start();
 			}
-			listeningTask = Task.Factory.StartNew(() => StartListening(cts.Token), cts.Token);
+			listeningTask = Task.Run(() => StartListening(cts.Token), cts.Token);
+		}
+
+		public void ListenForReturnKey() {
+			Task.Run(() => {
+				while (true) {
+					bool doSleep;
+					try {
+						Console.ReadLine();
+						break;
+					} catch (IOException) {
+						// This might happen on appdomain unload
+						// until the previous threads are terminated.
+						doSleep = true;
+					} catch (ThreadAbortException) {
+						doSleep = true;
+					}
+
+					if (doSleep)
+						Thread.Sleep(500);
+				}
+				Stop();
+				Environment.Exit(0);
+			});
 		}
 
 		private void StartListening(CancellationToken token) {
 			if (IsLocal) {
 				var clientSession = new ClientSession(null, IsLocal, DebuggerPort, Password);
-				Task.Factory.StartNew(clientSession.HandleSession, token).Wait();
+				Task.Run((Action)clientSession.HandleSession, token).Wait();
 				token.ThrowIfCancellationRequested();
 			} else {
 				while (true) {
@@ -81,7 +105,7 @@ namespace MonoTools.Debugger.Library {
 					logger.Info("Accepted client: " + client.Client.RemoteEndPoint);
 					var clientSession = new ClientSession(client.Client, IsLocal, DebuggerPort, Password);
 
-					Task.Factory.StartNew(clientSession.HandleSession, token).Wait();
+					Task.Run((Action)clientSession.HandleSession, token).Wait();
 				}
 			}
 		}
@@ -128,7 +152,9 @@ namespace MonoTools.Debugger.Library {
 		}
 
 		public void WaitForExit() {
-			listeningTask.Wait();
+			try {
+				listeningTask.Wait();
+			} catch { }
 		}
 	}
 }

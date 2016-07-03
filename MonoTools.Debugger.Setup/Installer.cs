@@ -24,7 +24,7 @@ namespace MonoTools.Debugger.Setup {
 		/// </summary>
 		/// <param name="password">Password or null.</param>
 		public static void Sudo(string password = null) {
-			if (OS.IsWindows) return;
+			if (OS.IsWindows || Syscall.getuid() == 0) return;
 			var self = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
 			var b = new StringBuilder();
 			if (!string.IsNullOrEmpty(password)) b.Append($"-S ");
@@ -126,7 +126,7 @@ namespace MonoTools.Debugger.Setup {
 				Window.OpenDialog(@"You can now use this machine as
 a debug server with MonoTools.
 If you have set a password and custom ports, you need to set them in
-the MonoTools options in VisualStudio.
+the MonoTools options in VisualStudio also.
 
 <!Ok>[    Ok    ]</!Ok>
 ");
@@ -141,10 +141,10 @@ in a console window.
 		}
 
 
-		public static void Install(string password = null, string ports = null, Setups setup = Setups.Service, string home = null) {
+		public static void Install(string password = null, string ports = null, Setups setup = Setups.Service, string home = null, string sudopwd = null) {
 			Home = home;
 
-			Sudo();
+			Sudo(sudopwd);
 
 			if (password == null && ports == null) {
 				var win = Window.OpenDialog(@"MonoTools Debugger Server Setup

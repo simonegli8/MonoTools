@@ -9,7 +9,8 @@ namespace MonoTools.VSExtension.Views {
 		public SetupSSHServer() {
 			InitializeComponent();
 			WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+			Ports.Text = Options.Ports;
+			DebugPassword.Password = Options.Password;
 		}
 
 		private void Install(object sender, RoutedEventArgs e) {

@@ -209,6 +209,7 @@
     <Compile Include="VisualStudio\Guids.cs" />
     <Compile Include="VisualStudio\MonoToolsInstaller.cs" />
     <Compile Include="VisualStudio\MonoToolsOptionsDialogPage.cs" />
+    <Compile Include="VisualStudio\Options.cs" />
     <Compile Include="VisualStudio\PkgCmdID.cs" />
     <Compile Include="VisualStudio\StatusBarProgress.cs" />
     <Compile Include="VisualStudio\VSPackage.cs" />
@@ -217,6 +218,7 @@
     <Resource Include="Resources\MonoToolsLogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Content Include="Resources\MonoToolsLogo.svg" />
     <Content Include="Resources\Screenshot.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -264,6 +266,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </None>
+    <Resource Include="Resources\MonoToolsLogo.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
     <Page Include="Views\ServersFound.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

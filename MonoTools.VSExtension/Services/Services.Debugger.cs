@@ -235,9 +235,8 @@ namespace MonoTools.VSExtension {
 			url = props.Get("StartURL");
 			page = props.Get("StartPage");
 
-			Properties monoHelperProperties = dte.Properties["MonoTools", "General"];
-			var ports = (string)monoHelperProperties.Item("MonoDebuggerPorts").Value;
-			var password = (string)monoHelperProperties.Item("MonoDebuggerPassword").Value;
+			var ports = Options.Ports;
+			var password = Options.Password;
 
 			ApplicationTypes appType = isWeb ? ApplicationTypes.WebApplication : ApplicationTypes.DesktopApplication;
 			if (isWeb) {

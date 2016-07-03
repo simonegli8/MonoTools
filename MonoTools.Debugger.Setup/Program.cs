@@ -10,7 +10,7 @@ namespace MonoTools.Debugger.Setup {
 		public static void Main(string[] args) {
 
 			if (args.Any(a => a.Contains("help") || a.Contains("?"))) {
-				Console.WriteLine(@"usage: mono MonoDebugger.exe [-ports=message-port,debugger-port,discovery-port] [-password=server-password] [-manual]
+				Console.WriteLine(@"usage: mono MonoDebugger.exe [-ports=message-port,debugger-port,discovery-port] [-password=server-password] [-manual] [-sudopwd=sudo-password]
 
 If you omit -ports and -password, MonoDebugger.exe will prompt how to setup
 the mono debug server.
@@ -27,10 +27,11 @@ the password in the MonoTools VisualStudio options.");
 
 			var ports = args.FirstOrDefault(a => a.StartsWith("-ports="))?.Substring("-ports=".Length);
 			var password = args.FirstOrDefault(a => a.StartsWith("-password="))?.Substring("-password=".Length);
+			var sudopwd = args.FirstOrDefault(a => a.StartsWith("-sudopwd="))?.Substring("-sudopwd=".Length);
 			var manual = args.Any(a => a == "-manual");
 			var home = args.FirstOrDefault(a => a.StartsWith("-home="))?.Substring("-home=".Length) ?? Environment.GetFolderPath(Environment.SpecialFolder.Personal);
 
-			Installer.Install(password, ports, manual ? Installer.Setups.Manual : Installer.Setups.Service, home);
+			Installer.Install(password, ports, manual ? Installer.Setups.Manual : Installer.Setups.Service, home, sudopwd);
 			
 		}
 	}

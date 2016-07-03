@@ -175,6 +175,17 @@
 				</Strings>
 			</Button>
 
+			<Button guid="GuidMonoToolsCmdSet" id="MoMAProjectID" priority="0x0100" type="Button">
+				<Parent guid="GuidMonoToolsCmdSet" id="MoMAGroup" />
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultDisabled</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>TextMenuUseButton</CommandFlag>
+				<Strings>
+					<ButtonText>MoMA Project</ButtonText>
+				</Strings>
+			</Button>
+
 			<Button guid="GuidMonoToolsCmdSet" id="SetupServerID" priority="0x0100" type="Button">
 				<Parent guid="GuidMonoToolsCmdSet" id="HelpGroup" />
 				<Strings>

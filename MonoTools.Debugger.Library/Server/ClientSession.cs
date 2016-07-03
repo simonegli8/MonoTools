@@ -97,8 +97,10 @@ namespace MonoTools.Debugger.Library {
 		}
 
 		private void StartMono(ApplicationTypes type, Frameworks framework, string arguments, string workingDirectory, string url) {
-			Console.BackgroundColor = ConsoleColor.Black;
-			Console.Clear();
+			if (OS.IsMono) {
+				Console.BackgroundColor = ConsoleColor.Black;
+				Console.Clear();
+			}
 			MonoProcess proc = MonoProcess.Start(type, targetExe, framework, arguments, url);
 			proc.DebuggerPort = DebuggerPort;
 			workingDirectory = string.IsNullOrEmpty(workingDirectory) ? rootPath : workingDirectory;
