@@ -310,10 +310,11 @@ namespace MonoTools.VisualStudio {
 			var response = await session.WaitForAnswerAsync();
 			if (!(response is StatusMessage)) throw new InvalidOperationException($"Wrong response message type {response.GetType().FullName}.");
 			var status = (StatusMessage)response;
+			if (status.Command == Library.Commands.Exit) return;
 			if (status.Command == Library.Commands.InvalidPassword) {
 				throw new InvalidOperationException("Invalid debug server password.");
 			} else if (status.Command == Library.Commands.Exception) {
-				throw new Exception($"Server Exception:\r\n{status.ExceptionMessage}\r\n{status.StackTrace}");
+				throw new Exception($"Server Exception:\r\n{status.ExceptionMessage}\r\n{status.StackTrace}"); 
 			} else if (status.Command != Library.Commands.Started) {
 				throw new Exception($"Invalid response \"{status.Command}\" from server.");
 			}

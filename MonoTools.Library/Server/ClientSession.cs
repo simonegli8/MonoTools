@@ -114,9 +114,9 @@ namespace MonoTools.Library {
 		}
 
 		private void SendOutput(string text) {
-			EnsureSentStarted();
-			logger.Info(text);
 			if (text != null) {
+				EnsureSentStarted();
+				logger.Info(text);
 				if (!IsLocal) Console.WriteLine(text);
 				lock (communication) communication.SendAsync(new StatusMessage(Commands.Info) { Output = text });
 			}
@@ -128,6 +128,8 @@ namespace MonoTools.Library {
 		}
 
 		private void MonoExited(object sender, EventArgs e) {
+			EnsureSentStarted();
+
 			Console.BackgroundColor = ConsoleColor.DarkBlue;
 
 			startedSent = false;
