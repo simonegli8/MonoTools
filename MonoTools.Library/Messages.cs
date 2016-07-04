@@ -51,8 +51,7 @@ namespace MonoTools.Library {
 			Files = new List<string>(); Directories = new List<string>();
 		}
 
-		[OnSerializing]
-		public void RelativePaths(StreamingContext context) {
+		public void RelativePaths() {
 			var root = RootPath;
 			if (!root.EndsWith(Path.DirectorySeparatorChar.ToString())) root += Path.DirectorySeparatorChar; // append dir separator char
 			for (int i = 0; i<Directories.Count; i++) { // make directories relative
@@ -67,8 +66,18 @@ namespace MonoTools.Library {
 			}
 		}
 
-		[OnDeserialized]
-		public void AbsolutePaths(StreamingContext context) {
+		public void ClearRoot() {
+			if (Directory.Exists(RootPath)) {
+				try {
+					Directory.Delete(RootPath, true);
+				} catch {
+					RootPath = RootPath+"-"+DateTime.Now.Ticks.ToString("x");
+				}
+			}
+		}
+
+		public void AbsolutePaths() {
+
 			for (int i = 0; i<Directories.Count; i++) { // make directories absolute
 				var name = Directories[i];
 				if (!Path.IsPathRooted(name)) Directories[i] = Path.Combine(RootPath, name.Replace('/', Path.DirectorySeparatorChar));
@@ -102,6 +111,7 @@ namespace MonoTools.Library {
 		}
 
 		public void Send(TcpCommunication connection) {
+			RelativePaths();
 			con = connection;
 			mode = StreamModes.Write;
 			stream = connection.Stream;
@@ -125,9 +135,10 @@ namespace MonoTools.Library {
 		}
 
 		public void Receive(TcpCommunication connection) {
+			ClearRoot();
+			AbsolutePaths();
 			con = connection;
 			stream = connection.Stream;
-			if (Directory.Exists(RootPath)) Directory.Delete(RootPath, true);
 			long position = 0;
 			foreach (var file in EnumerateFiles()) { // save files contents
 				var path = Path.Combine(RootPath, file.Name);

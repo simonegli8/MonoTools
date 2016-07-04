@@ -93,7 +93,7 @@
           using (var archive = new ZipArchive(outputFileStream, ZipArchiveMode.Create)) {
             foreach (var inputFileName in Files.Select(f => f.ItemSpec)) {
               var archiveEntry = archive.CreateEntry(Path.GetFileName(inputFileName));
-              using (var fs = new FileStream(inputFileName, FileMode.Open)) {
+              using (var fs = new FileStream(inputFileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                 using (var zipStream = archiveEntry.Open()) {
                   fs.CopyTo(zipStream);
                 }

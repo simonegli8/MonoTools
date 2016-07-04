@@ -13,7 +13,7 @@ namespace MonoTools.Library {
 
 	public class MonoDebugServer : IDisposable {
 		public const int DefaultMessagePort = 13881;
-		public const int DefaultDebuggerPort = 13882;
+		public const int DefaultDebuggerPort = 11000;
 		public const int DefaultDiscoveryPort = 13883;
 
 		public int MessagePort = DefaultMessagePort;

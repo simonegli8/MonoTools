@@ -17,7 +17,9 @@ namespace MonoTools.VisualStudio.MonoClient {
 		public DebugSession(DebugClient debugClient, Socket socket, bool compress = false) {
 			Client = debugClient;
 			communication = new TcpCommunication(socket, compress, Roles.Client, Client.IsLocal, Client.Password);
+			communication.ExtendedSendStart += (sender, args) => StatusBarProgress.Init();
 			communication.Progress = progress => StatusBarProgress.Progress(progress);
+			communication.ExtendedSendEnd += (sender, args) => StatusBarProgress.Clear();
 		}
 
 		public DebugClient Client { get; private set; }

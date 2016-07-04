@@ -99,7 +99,8 @@ namespace MonoTools.Library {
 			proc.Output = SendOutput;
 			process = proc.Start();
 			logger.Trace($"{proc.GetType().Name} started: {proc.process.StartInfo.FileName} {proc.process.StartInfo.Arguments}");
-			process.Exited += MonoExited;
+			//TODO doesn't work on mono, process.Exit get's fired too early with custom terminal.
+			if (OS.IsWindows) process.Exited += MonoExited;
 			EnsureSentStarted();
 		}
 

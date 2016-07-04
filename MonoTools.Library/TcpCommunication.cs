@@ -32,6 +32,11 @@ namespace MonoTools.Library {
 		public BinaryReader reader;
 		public Roles Role;
 		public static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		public event EventHandler ExtendedSendStart;
+		public event EventHandler ExtendedSendEnd;
+
+		public void OnExtendedSendStart() => ExtendedSendStart?.Invoke(this, EventArgs.Empty);
+		public void OnExtendedSendEnd() => ExtendedSendEnd?.Invoke(this, EventArgs.Empty);
 
 		public Action<double> Progress = progress => { };
 
@@ -74,7 +79,9 @@ namespace MonoTools.Library {
 				writer.Write((Int32)m.Length);
 				writer.Write(m.ToArray());
 				if (msg is IExtendedMessage) {
+					OnExtendedSendStart();
 					((IExtendedMessage)msg).Send(this);
+					OnExtendedSendEnd();
 				}
 				logger.Trace($"Message \"{msg.Command}\" sent.");
 			}
