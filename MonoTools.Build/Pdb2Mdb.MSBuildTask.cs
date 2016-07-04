@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
-namespace MonoTools.Tasks {
+namespace MonoTools.Build.Tasks {
 
 	public class Pdb2Mdb: Task {
 

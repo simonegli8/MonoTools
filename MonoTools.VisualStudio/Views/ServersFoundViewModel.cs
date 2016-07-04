@@ -27,7 +27,7 @@ namespace MonoTools.VisualStudio.Views
 
         private async void LookupServers(CancellationToken token)
         {
-            var discovery = new MonoServerDiscovery();
+            var discovery = new MonoServerDiscovery(Options.DiscoveryPort);
 
             try
             {
@@ -62,7 +62,7 @@ namespace MonoTools.VisualStudio.Views
             catch (SocketException ex)
             {
                 if (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
-                    MessageBox.Show("Port 15000 is in use.");
+                    MessageBox.Show($"Port {discovery.DiscoveryPort} is in use.");
                 else
                     MessageBox.Show(ex.ToString());
             }

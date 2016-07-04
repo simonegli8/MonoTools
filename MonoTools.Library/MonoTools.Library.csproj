@@ -100,9 +100,9 @@
     <EmbeddedResource Include="Server\CARoot.pvk" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MonoTools.Pdb2mdb\MonoTools.Pdb2Mdb.csproj">
-      <Project>{7EF3C263-1B7C-4901-8B9C-04350CF446C0}</Project>
-      <Name>MonoTools.Pdb2Mdb</Name>
+    <ProjectReference Include="..\MonoTools.Build\MonoTools.Build.csproj">
+      <Project>{7ef3c263-1b7c-4901-8b9c-04350cf446c0}</Project>
+      <Name>MonoTools.Build</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

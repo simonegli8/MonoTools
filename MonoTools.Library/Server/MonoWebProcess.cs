@@ -38,14 +38,14 @@ namespace MonoTools.Library {
 						var uri = new Uri(Url);
 						var port = uri.Port;
 						var ssl = uri.Scheme.StartsWith("https");
-						args.Append(" --port="); args.Append(port);
+						args.Append("--port="); args.Append(port);
 						if (ssl) args.Append(SSLXpsArguments());
 					}
 				},
 				infos => {
 					infos.CreateNoWindow = true;
 					infos.UseShellExecute = false;
-					infos.EnvironmentVariables["MONO_OPTIONS"] = GetProcessArgs();
+					infos.EnvironmentVariables["MONO_OPTIONS"] = DebugArgs;
 				});
 		}
 	}

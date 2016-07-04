@@ -42,16 +42,11 @@ namespace MonoTools.Library {
 				CreateWindow = true;
 			} else if (OS.IsWindows && !RedirectOutput) {
 				CreateWindow = true;
-			} else {
+			} else if (!Server.IsLocal) {
 				Console.BackgroundColor = ConsoleColor.Black;
 				Console.Clear();
 			}
 
-			var pa = GetProcessArgs();
-			if (pa != "") {
-				if (args.Length > 0) args.Append(" ");
-				args.Append(pa);
-			}
 			arguments?.Invoke(args);
 
 			ProcessStartInfo procInfo = GetProcessStartInfo(exe);
@@ -64,14 +59,19 @@ namespace MonoTools.Library {
 			if (RedirectOutput) {
 				process.ErrorDataReceived += (sender, data) => Output(data.Data + "\r\n");
 				process.OutputDataReceived += (sender, data) => Output(data.Data + "\r\n");
-				process.BeginOutputReadLine();
 			} else {
 				procInfo.UseShellExecute = true;
 			}
 
 			process.Start();
 
+			if (RedirectOutput) {
+				process.BeginOutputReadLine();
+				process.BeginErrorReadLine();
+			}
+
 			RaiseProcessStarted();
+
 			return process;
 		}
 
@@ -83,11 +83,7 @@ namespace MonoTools.Library {
 				handler(this, EventArgs.Empty);
 		}
 
-		protected string GetProcessArgs() {
-			//IPAddress ip = GetLocalIp();
-			IPAddress ip = IPAddress.Any;
-			return Message.Debug ? $"--debugger-agent=address={ip}:{DebuggerPort},transport=dt_socket,server=y --debug=mdb-optimizations" : "";
-		}
+		protected string DebugArgs => Message.Debug ? $"--debugger-agent=address={IPAddress.Any}:{DebuggerPort},transport=dt_socket,server=y --debug=mdb-optimizations" : "";
 
 		protected ProcessStartInfo GetProcessStartInfo(string monoBin) {
 			var procInfo = new ProcessStartInfo(monoBin) {

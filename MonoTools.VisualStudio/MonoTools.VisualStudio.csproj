@@ -59,7 +59,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MonoTools.VisualStudio</RootNamespace>
-    <AssemblyName>MonoTools.VisualStudio</AssemblyName>
+    <AssemblyName>MonoTools</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\sn.pfx</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -73,7 +73,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DeployExtension>True</DeployExtension>
-    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
+    <CopyVsixExtensionFiles>True</CopyVsixExtensionFiles>
+    <CopyVsixExtensionLocation>C:\Users\Simon\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\lmu25ci2.rks</CopyVsixExtensionLocation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -194,7 +195,7 @@
     <Compile Include="VisualStudio\MonoToolsOptionsDialogPage.cs" />
     <Compile Include="VisualStudio\Options.cs" />
     <Compile Include="VisualStudio\PkgCmdID.cs" />
-    <Compile Include="VisualStudio\StatusBarProgress.cs" />
+    <Compile Include="VisualStudio\StatusBar.cs" />
     <Compile Include="VisualStudio\VSPackage.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -221,9 +222,10 @@
       <LastGenOutput>source.extension.resx</LastGenOutput>
       <CustomToolNamespace>MonoTools</CustomToolNamespace>
     </None>
-    <Content Include="..\MonoTools.Pdb2mdb\Pdb2Mdb.targets">
-      <Link>Pdb2Mdb.targets</Link>
+    <Content Include="..\MonoTools.Build\MonoTools.targets">
+      <Link>MonoTools.targets</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -248,9 +250,6 @@
     </Content>
     <Resource Include="Resources\start.png" />
     <Resource Include="Resources\startwithoutdebugging.png" />
-    <Resource Include="source.extension.ico">
-      <DependentUpon>source.extension.vsixmanifest</DependentUpon>
-    </Resource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Resources.xaml">
@@ -280,6 +279,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MonoTools.Build\MonoTools.Build.csproj">
+      <Project>{7ef3c263-1b7c-4901-8b9c-04350cf446c0}</Project>
+      <Name>MonoTools.Build</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MonoTools.Debugger\MonoTools.Debugger.csproj">
       <Project>{c99840f2-29f7-44fc-a152-3cdd7fc41b21}</Project>
       <Name>MonoTools.Debugger</Name>
@@ -287,10 +290,6 @@
     <ProjectReference Include="..\MonoTools.Library\MonoTools.Library.csproj">
       <Project>{fe76aee5-c4e3-45ed-aa18-29df82ab405c}</Project>
       <Name>MonoTools.Library</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MonoTools.Pdb2mdb\MonoTools.Pdb2Mdb.csproj">
-      <Project>{7ef3c263-1b7c-4901-8b9c-04350cf446c0}</Project>
-      <Name>MonoTools.Pdb2Mdb</Name>
     </ProjectReference>
     <ProjectReference Include="..\MonoTools.Server.Setup\MonoTools.Server.Setup.csproj">
       <Project>{58eacd05-33ea-4e45-80b2-dc9543021fb3}</Project>

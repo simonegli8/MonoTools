@@ -116,6 +116,7 @@ namespace MonoTools.Library {
 		}
 
 		public async Task<Message> ReceiveAsync(CancellationToken token) {
+			if (token == null) return await ReceiveAsync();
 			return await Task.Run(() => Receive(), token);
 		}
 		public async Task<Message> ReceiveAsync() {
@@ -125,6 +126,7 @@ namespace MonoTools.Library {
 			return await Task.Run(() => Receive<T>());
 		}
 		public async Task<T> ReceiveAsync<T>(CancellationToken token) where T : Message, new() {
+			if (token == null) return await ReceiveAsync<T>();
 			return await Task.Run(() => Receive<T>(), token);
 		}
 

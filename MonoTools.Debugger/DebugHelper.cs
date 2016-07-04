@@ -9,7 +9,8 @@ namespace MonoTools.Debugger
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        internal static void TraceEnteringMethod([CallerMemberName] string callerMember = "")
+		[System.Diagnostics.Conditional("DEBUG")]
+		internal static void TraceEnteringMethod([CallerMemberName] string callerMember = "")
         {
             MethodBase mth = new StackTrace().GetFrame(1).GetMethod();
             if (mth.ReflectedType != null)

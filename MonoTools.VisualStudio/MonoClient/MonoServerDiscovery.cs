@@ -26,7 +26,10 @@ namespace MonoTools.VisualStudio.MonoClient {
 				if (task != null) {
 					UdpReceiveResult udpResult = task.Result;
 					string msg = Encoding.Default.GetString(udpResult.Buffer);
-					return new MonoServerInformation { Message = msg, IpAddress = udpResult.RemoteEndPoint.Address };
+					var ip = udpResult.RemoteEndPoint.Address;
+					var localips = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Environment.MachineName));
+					if (localips.Any(adr => ip == adr)) ip = IPAddress.Parse("127.0.0.1");
+					return new MonoServerInformation { Message = msg, IpAddress = ip };
 				}
 			}
 

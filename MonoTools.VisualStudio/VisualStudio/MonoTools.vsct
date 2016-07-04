@@ -137,6 +137,17 @@
 				</Strings>
 			</Button>
 
+			<Button guid="GuidMonoToolsCmdSet" id="SuppressXBuildForProjectID" priority="0x0100" type="Button">
+				<Parent guid="GuidMonoToolsCmdSet" id="BuildProjectGroup" />
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultDisabled</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>TextMenuUseButton</CommandFlag>
+				<Strings>
+					<ButtonText>Suppress XBuild for Project</ButtonText>
+				</Strings>
+			</Button>
+			
 			<Button guid="GuidMonoToolsCmdSet" id="StartMonoID" priority="0x0100" type="Button">
 				<Parent guid="GuidMonoToolsCmdSet" id="DebugGroup" />
 				<Icon guid="StartIcon" id="Icon" />
@@ -237,13 +248,14 @@
 			<IDSymbol name="XBuildProjectID" value="0x0102" />
 			<IDSymbol name="XRebuildProjectID" value="0x0103" />
 			<IDSymbol name="AddPdb2MdbToProjectID" value="0x0104" />
-			<IDSymbol name="StartMonoID" value="0x0105" />
-			<IDSymbol name="DebugMonoID" value="0x0106" />
-			<IDSymbol name="OpenLogFileID" value="0x0107" />
-			<IDSymbol name="MoMASolutionID" value="0x0108" />
-			<IDSymbol name="MoMAProjectID" value="0x0109" />
-			<IDSymbol name="SetupServerID" value="0x010A" />
-			<IDSymbol name="HelpID" value="0x010B" />
+			<IDSymbol name="SuppressXBuildForProjectID" value="0x0105" />
+			<IDSymbol name="StartMonoID" value="0x0106" />
+			<IDSymbol name="DebugMonoID" value="0x0107" />
+			<IDSymbol name="OpenLogFileID" value="0x0108" />
+			<IDSymbol name="MoMASolutionID" value="0x0109" />
+			<IDSymbol name="MoMAProjectID" value="0x010A" />
+			<IDSymbol name="SetupServerID" value="0x010B" />
+			<IDSymbol name="HelpID" value="0x010C" />
 		</GuidSymbol>
 
 		<GuidSymbol name="BuildSolutionIcon" value="{F13126C3-D1DD-41A1-B00A-B6F0DCAC618B}">

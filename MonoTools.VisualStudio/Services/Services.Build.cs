@@ -7,12 +7,12 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Build.Construction;
 using EnvDTE;
 using EnvDTE80;
 using Mono.Cecil;
 using Mono.Cecil.Mdb;
 using Mono.Cecil.Pdb;
-using MonoTools.Library;
 
 namespace MonoTools.VisualStudio {
 
@@ -172,17 +172,27 @@ namespace MonoTools.VisualStudio {
 			}
 		}
 
-		const string targets = "Pdb2Mdb.targets";
-		const string MSBuildExtensionsPath = @"$(MSBuildExtensionsPath)\johnshope.com\MonoTools";
+		const string Targets = "MonoTools.targets";
+		const string BuildDll = "MonoTools.Build.dll";
+		const string CecilDll = "Mono.Cecil.dll";
+		const string CecilMdbDll = "Mono.Cecil.Mdb.dll";
+		const string MSBuildExtensionsPathProperty = @"$(MSBuildExtensionsPath)\johnshope.com\MonoTools";
+		const string MSBuildExtensionsPath = @"MSBuild\johnshope.com\MonoTools";
+
+		public void Copy(string sourceDir, string destDir, params string[] files) {
+			Directory.CreateDirectory(destDir);
+			foreach (var file in files) {
+				try {
+					File.Copy(Path.Combine(sourceDir, file), Path.Combine(destDir, file), true);
+				} catch { }
+			}
+		}
 
 		public void SetupMSBuildExtension() {
-			var dll = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-			var src = Path.GetDirectoryName(dll);
-
+			var exe = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+			var src = Path.GetDirectoryName(exe);
 			var msbuild = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), MSBuildExtensionsPath);
-			Directory.CreateDirectory(msbuild);
-			File.Copy(dll, Path.Combine(msbuild, Path.GetFileName(dll)), true);
-			File.Copy(Path.Combine(src, targets), Path.Combine(msbuild, targets), true);
+			Copy(src, msbuild, Targets, BuildDll, CecilDll, CecilMdbDll);
 		}
 
 		public void AddPdb2MdbToProject() {
@@ -198,22 +208,62 @@ namespace MonoTools.VisualStudio {
 				}
 				if (project == null) return;
 
-				var filename = project.FullName;
-				var bproj = new Microsoft.Build.Evaluation.Project(filename);
+				var bproj = Microsoft.Build.Evaluation.ProjectCollection.GlobalProjectCollection.LoadedProjects.FirstOrDefault(proj => proj.FullPath == project.FullName);
 
-				var imppath = Path.Combine(MSBuildExtensionsPath, targets);
+				var imppath = Path.Combine(MSBuildExtensionsPathProperty, Targets);
 
-				if (bproj.Imports.Any(imp => imp.ImportedProject.FullPath == imppath)) return;
+				var property = bproj.Properties.FirstOrDefault(prop => !prop.IsImported && prop.Name == "XBuild");
+				var import = bproj.Xml.Imports.FirstOrDefault(imp => imp.Project == imppath);
 
-				bproj.Xml.AddImport(imppath);
-				dte.ExecuteCommand("Project.UnloadProject", string.Empty);
-				bproj.Save();
-				dte.ExecuteCommand("Project.ReloadProject", string.Empty);
+				if (property == null) bproj.Xml.AddProperty("XBuild", "$([System.Environment]::CommandLine.Contains(\"xbuild\"))");
+				else property.UnevaluatedValue = "$([System.Environment]::CommandLine.Contains(\"xbuild\"))";
+
+				if (import == null) bproj.Xml.AddImport(imppath).Condition = " '$(XBuild)' == 'False' ";
+				else import.Condition = " '$(XBuild)' == 'False' ";
+
+				bproj.ReevaluateIfNecessary();
+
+				StatusBar.Text($"Pdb2Mdb added to {project.Name}");
 			} catch (Exception ex) {
 				logger.Error<Exception>(ex);
 				MessageBox.Show(ex.Message, "MonoTools", MessageBoxButton.OK, MessageBoxImage.Hand);
 			}
 		}
+
+		public void SuppressXBuildForProject() {
+			try {
+				dte.ExecuteCommand("File.SaveAll", "");
+
+				Project project = null;
+				Array activeSolutionProjects = dte.ActiveSolutionProjects as Array;
+				if ((activeSolutionProjects != null) && (activeSolutionProjects.Length > 0)) {
+					project = activeSolutionProjects.GetValue(0) as Project;
+				}
+				if (project == null) return;
+
+				var bproj = Microsoft.Build.Evaluation.ProjectCollection.GlobalProjectCollection.LoadedProjects.FirstOrDefault(proj => proj.FullPath == project.FullName);
+
+				var property = bproj.Properties.FirstOrDefault(prop => !prop.IsImported && prop.Name == "XBuild");
+				var hassuppress = bproj.Xml.PropertyGroups.Any(g => g.Properties.Any(p => p.Name == "BuildDependsOn" && p.Value == "" && p.Condition == " '$(XBuild)' == 'True' "));
+
+				if (property == null) bproj.Xml.AddProperty("XBuild", "$([System.Environment]::CommandLine.Contains(\"xbuild\"))");
+				else property.UnevaluatedValue = "$([System.Environment]::CommandLine.Contains(\"xbuild\"))";
+
+				if (!hassuppress) {
+					var group = bproj.Xml.CreatePropertyGroupElement();
+					bproj.Xml.AppendChild(group);
+					group.AddProperty("BuildDependsOn", "").Condition = " '$(XBuild)' == 'True' ";
+				}
+
+				bproj.ReevaluateIfNecessary();
+
+				StatusBar.Text($"{project.Name} excluded from XBuild");
+			} catch (Exception ex) {
+				logger.Error<Exception>(ex);
+				MessageBox.Show(ex.Message, "MonoTools", MessageBoxButton.OK, MessageBoxImage.Hand);
+			}
+		}
+
 
 		private void GeneratePdbs(string absoluteOutputPath, OutputWindowPane outputWindowPane) {
 

@@ -147,7 +147,9 @@ namespace MonoTools.VisualStudio {
 					if (uri.Host == "*" || uri.Host == "") host = "*";
 					else {
 						host = uri.Host;
-						var local = Dns.GetHostAddresses(host).Any(a => a.IsIPv6LinkLocal || a == IPAddress.Parse("127.0.0.1"));
+						var localips = Dns.GetHostAddresses(host).Concat(Dns.GetHostAddresses(Environment.MachineName));
+						var local = host == "localhost" || string.Compare(host, Environment.MachineName, true) == 0 || 
+							Dns.GetHostAddresses(host).Any(a => a.IsIPv6LinkLocal || a == IPAddress.Parse("127.0.0.1") || localips.Any(b => a == b));
 						if (local) host = null;
 					}
 				} else {
@@ -307,14 +309,19 @@ namespace MonoTools.VisualStudio {
 			// send execute request
 			await session.ExecuteAsync(targetExe, arguments, appType, framework, Path.GetFullPath(outputDir), workingDir, url);
 			// read response
-			var response = await session.WaitForAnswerAsync();
+
+			var cancel = local ? MonoDebugServer.Current.Cancel : null;
+
+			var response = await session.WaitForAnswerAsync(cancel.Token);
+			if (cancel.IsCancellationRequested) return;
+
 			if (!(response is StatusMessage)) throw new InvalidOperationException($"Wrong response message type {response.GetType().FullName}.");
 			var status = (StatusMessage)response;
 			if (status.Command == Library.Commands.Exit) return;
 			if (status.Command == Library.Commands.InvalidPassword) {
 				throw new InvalidOperationException("Invalid debug server password.");
 			} else if (status.Command == Library.Commands.Exception) {
-				throw new Exception($"Server Exception:\r\n{status.ExceptionMessage}\r\n{status.StackTrace}"); 
+				throw new Exception($"Server Exception:\r\n{status.ExceptionType}\r\n{status.ExceptionMessage}\r\n{status.StackTrace}"); 
 			} else if (status.Command != Library.Commands.Started) {
 				throw new Exception($"Invalid response \"{status.Command}\" from server.");
 			}
@@ -322,13 +329,15 @@ namespace MonoTools.VisualStudio {
 			// handle console output responses
 			consoleTask = Task.Run(async () => { 
 				try {
-					var msg = await session.WaitForAnswerAsync<StatusMessage>();
+					var msg = await session.WaitForAnswerAsync<StatusMessage>(cancel.Token);
+					if (cancel.IsCancellationRequested) return;
 					while (msg?.Command == Library.Commands.Info) {
 						System.Diagnostics.Debugger.Log(1, "", msg.Output);
-						msg = await session.WaitForAnswerAsync<StatusMessage>();
+						msg = await session.WaitForAnswerAsync<StatusMessage>(cancel.Token);
+						if (cancel.IsCancellationRequested) return;
 					}
 					if (msg?.Command == Library.Commands.Exception) {
-						logger.Error($"Server Exception:\r\n{msg.ExceptionMessage}\r\n{msg.StackTrace}");
+						logger.Error($"Server Exception:\r\n{status.ExceptionType}\r\n{msg.ExceptionMessage}\r\n{msg.StackTrace}");
 					} else if (msg?.Command == Library.Commands.Exit) {
 						DebuggedProcess.Instance.Detach();
 					} else	session.PushBack(msg);

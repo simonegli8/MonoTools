@@ -30,10 +30,14 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <XBuild>$([System.Environment]::CommandLine.Contains("xbuild"))</XBuild>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>
     </StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>MonoToolsLogo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
@@ -72,12 +76,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Lib\Mono.Posix.dll" />
+    <Content Include="MonoToolsLogo.ico" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Server.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <UsingTask TaskName="Zip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+  <UsingTask TaskName="Zip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" Condition=" '$(XBuild)' == 'False' ">
     <ParameterGroup>
       <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
       <ZipFile ParameterType="System.String" Required="true" />
@@ -104,7 +109,7 @@
       ]]></Code>
     </Task>
   </UsingTask>
-  <Target Name="ZipServer">
+  <Target Name="ZipServer" Condition=" '$(XBuild)' == 'False' ">
     <PropertyGroup>
       <Server>..\Output\$(Configuration)\Server\</Server>
     </PropertyGroup>
@@ -118,10 +123,7 @@
     </PropertyGroup>
     <Zip Files="@(FilesToZip)" ZipFile="$(ProjectDir)$(TargetZipFile)" Overwrite="true" />
   </Target>
-  <Target Name="BeforeBuild" DependsOnTargets="ZipServer">
-    <Message Text="$(MSBuildExtensionsPath)\johnshope.com\MonoTools\Pdb2Mdb.targets" />
-  </Target>
-  <Import Project="$(MSBuildExtensionsPath)\johnshope.com\MonoTools\Pdb2Mdb.targets" />
+  <Target Name="BeforeBuild" DependsOnTargets="ZipServer" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

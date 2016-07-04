@@ -1,5 +1,10 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Net;
+using System.Linq;
+using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows;
+using MonoTools.VisualStudio.MonoClient;
 
 namespace MonoTools.VisualStudio.Views {
 	/// <summary>
@@ -28,21 +33,44 @@ namespace MonoTools.VisualStudio.Views {
 			base.OnClosing(e);
 		}
 
-		private void Install(object sender, RoutedEventArgs e) {
+		private void InstallClicked(object sender, RoutedEventArgs e) {
 			Services.Current.ServerSetup(Url.Text, Username.Text, Password.Password, DebugPassword.Password, Ports.Text, Manual.IsChecked.GetValueOrDefault());
 			DialogResult = true;
 			Close();
 		}
 
-		private async void Upgrade(object sender, RoutedEventArgs e) {
+		private async void UpgradeClicked(object sender, RoutedEventArgs e) {
 			await Services.Current.ServerUpgrade(Url.Text, Ports.Text, Password.Password);
 			DialogResult = true;
 			Close();
 		}
 
-		private void Cancel(object sender, RoutedEventArgs e) {
+		private void CancelClicked(object sender, RoutedEventArgs e) {
 			DialogResult = false;
 			Close();
+		}
+
+		private void UrlModified(object sender, RoutedEventArgs e) {
+			Task.Run(() => {
+				try {
+					var host = new Uri(Url.Text).Host;
+					var ip = Dns.GetHostAddresses(host).FirstOrDefault();
+					if (ip != null) {
+						var client = new DebugClient(false, Ports.Text ?? Options.Ports, DebugPassword.Password ?? Options.Password);
+						bool outdated = false;
+						try {
+							using (var session = client.ConnectToServerAsync(ip.ToString()).Result) {
+								outdated = new Version(App.Version) > session.GetServerVersion();
+							}
+						} catch {
+							outdated = false;
+						}
+						Update.IsEnabled = outdated;
+					} else {
+						Update.IsEnabled = false;
+					}
+				} catch { }
+			});
 		}
 	}
 }

@@ -187,7 +187,10 @@ in a console window.
 
 			if (Password == null && Ports == null) {
 				var win = Window.OpenDialog(@"MonoTools.Server Setup
-===============================
+=======================
+
+
+
 
 |    Server Password:         <*Password>                           </*Password>
 |    (Blank for no password) 
@@ -197,7 +200,9 @@ in a console window.
 |    (You must specify three comma separated ports,
 |    or leave blank for default.)
 
-<!Service>[  Start as Service  ]</!Service>    <&Manual>[  Start manually  ]</&Manual>    <~Cancel>[  Cancel  ]</~Cancel> 
+
+
+<!Service>[  Start as Service  ]</!Service>      <&Manual>[  Start manually  ]</&Manual>      <~Cancel>[  Cancel  ]</~Cancel> 
 ", new { Password = "", Ports = "" });
 				Ports = win.Ports.Value;
 				Password = win.Password.Value;

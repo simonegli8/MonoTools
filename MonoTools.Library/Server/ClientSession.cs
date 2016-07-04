@@ -131,7 +131,7 @@ namespace MonoTools.Library {
 		private void MonoExited(object sender, EventArgs e) {
 			EnsureSentStarted();
 
-			Console.BackgroundColor = ConsoleColor.DarkBlue;
+			if (!IsLocal) Console.BackgroundColor = ConsoleColor.DarkBlue;
 
 			startedSent = false;
 			logger.Info("Program closed: " + process.ExitCode);

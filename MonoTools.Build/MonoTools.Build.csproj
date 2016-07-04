@@ -7,8 +7,8 @@
     <ProjectGuid>{7EF3C263-1B7C-4901-8B9C-04350CF446C0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MonoTools.Pdb2Mdb</RootNamespace>
-    <AssemblyName>MonoTools.Pdb2Mdb</AssemblyName>
+    <RootNamespace>MonoTools.Build</RootNamespace>
+    <AssemblyName>MonoTools.Build</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\sn.pfx</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -81,12 +81,11 @@
     <None Include="ChangeLog" />
     <None Include="LICENSE" />
     <None Include="Makefile" />
+    <None Include="MonoTools.targets">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
     <None Include="pdb2mdb.exe.sources" />
-    <Content Include="Pdb2Mdb.targets">
-      <SubType>Designer</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitattributes" />

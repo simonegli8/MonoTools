@@ -11,6 +11,11 @@ namespace MonoTools.Library {
 
 		public override Process Start() {
 			return Start(MonoUtils.GetMonoPath(), args => {
+				var da = DebugArgs;
+				if (da != "") {
+					if (args.Length > 0) args.Append(" ");
+					args.Append(da);
+				}
 				if (args.Length > 0) args.Append(" ");
 				args.Append("\"");
 				args.Append(Message.Executable);

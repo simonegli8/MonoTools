@@ -75,6 +75,9 @@ namespace Microsoft.MIDebugEngine {
 		public event EventHandler ApplicationClosed;
 
 		internal void StartDebugging() {
+
+			DebugHelper.TraceEnteringMethod();
+
 			if (_vm != null)
 				return;
 

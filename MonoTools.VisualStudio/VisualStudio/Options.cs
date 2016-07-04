@@ -21,5 +21,32 @@ namespace MonoTools.VisualStudio {
 		public static string Password => (string)properties.Item("MonoDebuggerPassword").Value;
 		public static string MonoPath => (string)properties.Item("MonoInstallationPath").Value;
 		public static UserSettings Settings => UserSettingsManager.Current;
+
+		static int discoveryPort, messagePort, debuggerPort;
+
+		public static void ParsePorts() {
+			Library.MonoDebugServer.ParsePorts(Ports, out messagePort, out debuggerPort, out discoveryPort);
+		}
+
+		public static int DiscoveryPort {
+			get {
+				ParsePorts();
+				return discoveryPort;
+			}
+		}
+
+		public static int MessagePort {
+			get {
+				ParsePorts();
+				return messagePort;
+			}
+		}
+
+		public static int DebuggerPort {
+			get {
+				ParsePorts();
+				return debuggerPort;
+			}
+		}
 	}
 }

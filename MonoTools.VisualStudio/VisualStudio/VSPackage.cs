@@ -44,7 +44,7 @@ namespace MonoTools.VisualStudio {
 			TryRegisterAssembly();
 
 			ErrorsWindow.Initialize(this);
-			StatusBarProgress.Initialize(this);
+			StatusBar.Initialize(this);
 			Options.Initialize(this);
 
 			/* Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary {
@@ -82,6 +82,11 @@ namespace MonoTools.VisualStudio {
 				var addPdb2MdbToProjectMenuItem = new OleMenuCommand(AddPdb2MdbToProjectMenuItemClicked, addPdb2MdbToProjectMenuID);
 				addPdb2MdbToProjectMenuItem.BeforeQueryStatus += HasCurrentProject;
 				mcs.AddCommand(addPdb2MdbToProjectMenuItem);
+
+				var suppressXBuildForProjectMenuID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.SuppressXBuildForProject);
+				var suppressXBuildForProjectMenuItem = new OleMenuCommand(SuppressXBuildForProjectMenuItemClicked, suppressXBuildForProjectMenuID);
+				suppressXBuildForProjectMenuItem.BeforeQueryStatus += HasCurrentProject;
+				mcs.AddCommand(suppressXBuildForProjectMenuItem);
 
 				var startMonoMenuID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.StartMono);
 				var startMonoMenuItem = new OleMenuCommand(StartMonoMenuItemClicked, startMonoMenuID);
@@ -163,10 +168,10 @@ namespace MonoTools.VisualStudio {
 			var menuCommand = sender as OleMenuCommand;
 			if (menuCommand != null) {
 				var dte = GetService(typeof(DTE)) as DTE;
-				var sb = (SolutionBuild2)dte.Solution.SolutionBuild;
+				var sb = (SolutionBuild2)dte.Solution?.SolutionBuild;
 				menuCommand.Visible = true;
 				if (menuCommand.Visible)
-					menuCommand.Enabled = ((Array)sb.StartupProjects).Cast<string>().Count() == 1;
+					menuCommand.Enabled = ((Array)sb?.StartupProjects)?.Cast<string>().Count() == 1;
 			}
 		}
 
@@ -190,6 +195,7 @@ namespace MonoTools.VisualStudio {
 				string cmd;
 				switch ((uint)menuCommand.CommandID.ID) {
 				case PkgCmdID.AddPdb2MdbToProject: cmd = "Add pdb2mdb to"; break;
+				case PkgCmdID.SuppressXBuildForProject: cmd = "Suppress XBuild for"; break;
 				case PkgCmdID.MoMAProject: cmd = "MoMA"; break;
 				case PkgCmdID.XBuildProject: cmd = "XBuild"; break;
 				case PkgCmdID.XRebuildProject: cmd = "XRebuild"; break;
@@ -231,6 +237,10 @@ namespace MonoTools.VisualStudio {
 
 		private void AddPdb2MdbToProjectMenuItemClicked(object sender, EventArgs e) {
 			services.AddPdb2MdbToProject();
+		}
+
+		private void SuppressXBuildForProjectMenuItemClicked(object sender, EventArgs e) {
+			services.SuppressXBuildForProject();
 		}
 
 		private void MoMAClicked(object sender, EventArgs e) {

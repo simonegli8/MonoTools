@@ -24,7 +24,7 @@ namespace MonoTools.Library {
 		public static int InvalidPasswordAttempts = 0;
 
 		public static readonly Logger logger = LogManager.GetCurrentClassLogger();
-		private readonly CancellationTokenSource cts = new CancellationTokenSource();
+		public CancellationTokenSource Cancel = new CancellationTokenSource();
 		public string TerminalTemplate;
 
 		private Task listeningTask;
@@ -108,12 +108,12 @@ namespace MonoTools.Library {
 			}
 			listeningTask = Task.Run(() => {
 				try {
-					StartListening(cts.Token);
+					StartListening(Cancel.Token);
 				} catch { }
-			}, cts.Token);
+			}, Cancel.Token);
 		}
 
-		private CancellationTokenSource consoleCancellationToken = new CancellationTokenSource();
+		private CancellationTokenSource ConsoleCancel = new CancellationTokenSource();
 
 		public void ListenForCancelKey() {
 			string input;
@@ -135,16 +135,16 @@ namespace MonoTools.Library {
 				}
 				Stop();
 				Environment.Exit(0);
-			}), consoleCancellationToken.Token);
+			}), ConsoleCancel.Token);
 		}
 
 		public void SuspendCancelKey() {
-			if (!IsLocal) consoleCancellationToken.Cancel();
+			if (!IsLocal) ConsoleCancel.Cancel();
 		}
 
 		public void ResumeCancelKey() {
 			if (!IsLocal) {
-				consoleCancellationToken = new CancellationTokenSource();
+				ConsoleCancel = new CancellationTokenSource();
 				ListenForCancelKey();
 			}
 		}
@@ -179,11 +179,14 @@ namespace MonoTools.Library {
 
 		public void Stop() {
 			try {
-				cts.Cancel();
+				Cancel.Cancel();
+				ConsoleCancel.Cancel();
+
 				if (tcp != null && tcp.Server != null) {
 					tcp.Server.Close(0);
 					tcp = null;
 				}
+				if (IsLocal) 
 				if (listeningTask != null) {
 					if (!Task.WaitAll(new Task[] { listeningTask }, 5000))
 						logger.Error("listeningTask timeout!!!");
@@ -199,7 +202,7 @@ namespace MonoTools.Library {
 		public void StartAnnouncing() {
 			Task.Run(() => {
 				try {
-					CancellationToken token = cts.Token;
+					CancellationToken token = Cancel.Token;
 					logger.Trace("Start announcing");
 					using (var client = new UdpClient()) {
 						var ip = new IPEndPoint(IPAddress.Broadcast, DiscoveryPort);
