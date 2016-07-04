@@ -32,51 +32,21 @@ namespace MonoTools.Library {
 		}
 
 		public override Process Start() {
-			var monoBin = MonoUtils.GetMonoXsp(Framework);
-
-			var monoOptions = GetProcessArgs();
-			var args = new StringBuilder();
-			string template = null;
-
-			if (!Directory.Exists(Message.WorkingDirectory)) Directory.CreateDirectory(Message.WorkingDirectory);
-
-			if (!OS.IsWindows && !RedirectOutput && !string.IsNullOrEmpty(Server.TerminalTemplate)) { // use TerminalTemplate to start process
-				var p = Server.TerminalTemplate.IndexOf(' ');
-				if (p > 0) {
-					monoBin = Server.TerminalTemplate.Substring(0, p);
-					template = Server.TerminalTemplate.Substring(p+1);
-				} else {
-					args.Append(monoBin);
-					monoBin = Server.TerminalTemplate;
-				}
-			}
-			ProcessStartInfo procInfo = GetProcessStartInfo(monoBin);
-
-			procInfo.CreateNoWindow = true;
-			procInfo.UseShellExecute = false;
-			procInfo.EnvironmentVariables["MONO_OPTIONS"] = monoOptions;
-			if (Url != null) {
-				var uri = new Uri(Url);
-				var port = uri.Port;
-				var ssl = uri.Scheme.StartsWith("https");
-				args.Append(" --port="); args.Append(port);
-				if (ssl) args.Append(SSLXpsArguments());
-			}
-			procInfo.Arguments = template == null ? args.ToString() : string.Format(template, args.ToString());
-
-			process = new System.Diagnostics.Process();
-			process.StartInfo = procInfo;
-			process.EnableRaisingEvents = true;
-			if (RedirectOutput) {
-				process.ErrorDataReceived += (sender, data) => Output(data.Data + "\r\n");
-				process.OutputDataReceived += (sender, data) => Output(data.Data + "\r\n");
-			}
-			process.Start();
-			if (RedirectOutput) process.BeginOutputReadLine();
-
-			RaiseProcessStarted();
-
-			return process;
+			return Start(MonoUtils.GetMonoXsp(Framework),
+				args => {
+					if (Url != null) {
+						var uri = new Uri(Url);
+						var port = uri.Port;
+						var ssl = uri.Scheme.StartsWith("https");
+						args.Append(" --port="); args.Append(port);
+						if (ssl) args.Append(SSLXpsArguments());
+					}
+				},
+				infos => {
+					infos.CreateNoWindow = true;
+					infos.UseShellExecute = false;
+					infos.EnvironmentVariables["MONO_OPTIONS"] = GetProcessArgs();
+				});
 		}
 	}
 }

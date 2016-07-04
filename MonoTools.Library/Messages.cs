@@ -171,12 +171,10 @@ namespace MonoTools.Library {
 		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)EnumerateFiles()).GetEnumerator();
 	}
 
-	public enum ApplicationTypes { DesktopApplication, WebApplication }
-	public enum Commands : byte { Execute, Started, Shutdown, InvalidPassword, Upgrade, Info }
+	public enum ApplicationTypes { WindowsApplication, ConsoleApplication, WebApplication }
+	public enum Commands : byte { Info, Execute, Started, InvalidPassword, Upgrade, Exception, Exit }
 	public enum Frameworks { Net2, Net4 }
 
-	[Serializable]
-	public class Message { }
 
 	public interface IMessageWithFiles {
 		FilesCollection Files { get; }
@@ -189,12 +187,36 @@ namespace MonoTools.Library {
 
 
 	[Serializable]
-	public class CommandMessage : Message {
+	public class Message {
 		public Commands Command { get; set; }
+		public Version Version;
+		public string SecurityToken { get; set; }
+		public Message() { Version = Assembly.GetExecutingAssembly().GetName().Version; }
+		public Message(Commands command): this() { Command = command; }
+
+		public void SetSecurityToken(TcpCommunication con) {
+			if (con.Role == Roles.Client && !string.IsNullOrEmpty(con.Password)) {
+				SecurityToken = Cryptography.Encrypt((((IPEndPoint)con.socket.LocalEndPoint).Address).ToString(), con.Password);
+			}
+		}
+
+		public bool CheckSecurityToken(TcpCommunication con) {
+			if (con.Role == Roles.Server && !string.IsNullOrEmpty(con.Password)) {
+				if (string.IsNullOrEmpty(SecurityToken)) return false;
+				try {
+					var ip = Cryptography.Decrypt(SecurityToken, con.Password);
+					return ip == ((IPEndPoint)con.socket.RemoteEndPoint).Address.ToString();
+				} catch {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 
 	[Serializable]
-	public class ExecuteMessage : CommandMessage, IMessageWithFiles, IExtendedMessage {
+	public class ExecuteMessage : Message, IMessageWithFiles, IExtendedMessage {
+		public ExecuteMessage(): base(Commands.Execute) { }
 		public ApplicationTypes ApplicationType { get; set; }
 		public Frameworks Framework { get; set; }
 		public string Executable { get; set; }
@@ -204,7 +226,6 @@ namespace MonoTools.Library {
 		public bool IsLocal { get; set; }
 		public string LocalPath { get; set; }
 		public bool HasMdbs => Files.HasMdbs;
-		public string SecurityToken { get; set; }
 		public bool Debug { get; set; }
 		public string RootPath { get { return Files.RootPath; } set { Files.RootPath = value; } }
 		public FilesCollection Files { get; protected set; } = new FilesCollection();
@@ -240,38 +261,18 @@ namespace MonoTools.Library {
 			// make Executable absolute
 			if (!Path.IsPathRooted(Executable)) Executable = Path.Combine(RootPath, Executable.Replace('/', Path.DirectorySeparatorChar));
 		}
-
-		public void SetSecurityToken(TcpCommunication con) {
-			if (!string.IsNullOrEmpty(con.Password)) {
-				SecurityToken = Cryptography.Encrypt((((IPEndPoint)con.socket.LocalEndPoint).Address).ToString(), con.Password);
-			}
-		}
-
-		public bool CheckSecurityToken(TcpCommunication con) {
-			if (!string.IsNullOrEmpty(con.Password)) {
-				if (string.IsNullOrEmpty(SecurityToken)) return false;
-				try {
-					var ip = Cryptography.Decrypt(SecurityToken, con.Password);
-					return ip == ((IPEndPoint)con.socket.RemoteEndPoint).Address.ToString();
-				} catch {
-					return false;
-				}
-			}
-			return true;
-		}
 	}
 
 	[Serializable]
-	public class StatusMessage : CommandMessage {
-		public Version Version;
-		public StatusMessage() {
-			Version = Assembly.GetEntryAssembly().GetName().Version;
-		}
-	}
-
-	[Serializable]
-	public class ConsoleOutputMessage : Message {
-		public string Text { get; set; }
+	public class StatusMessage : Message {
+		public StatusMessage(): base(Commands.Info) { }
+		public StatusMessage(Commands command): base(command) { }
+		public StatusMessage(Exception ex) : base(Commands.Exception) { HasException = true; ExceptionMessage = ex.Message; StackTrace = ex.StackTrace; }
+		public string Output;
+		public bool HasException;
+		public string ExceptionMessage;
+		public string StackTrace;
+		public int ExitCode;
 	}
 
 }

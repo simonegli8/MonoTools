@@ -1,5 +1,5 @@
-namespace MonoTools.VisualStudio
-{
+namespace MonoTools {
+
     static class Vsix
     {
         public const string Id = "27D183E9-5D2B-44D6-9EC8-2DB329096DF7";

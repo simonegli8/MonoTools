@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Sockets;
-using System.Runtime.Serialization;
-using System.IO.Compression;
-using System.Threading.Tasks;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
+using NLog;
 
 namespace MonoTools.Library {
 
@@ -29,12 +31,15 @@ namespace MonoTools.Library {
 		public BinaryWriter writer;
 		public BinaryReader reader;
 		public Roles Role;
+		public static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
 		public Action<double> Progress = progress => { };
 
-		public TcpCommunication(Socket socket, bool compressed, Roles role, bool local, string password) {
+		public TcpCommunication(Socket socket, bool compressed, Roles role, bool local, string password, string rootPath = null) {
 			IsLocal = local;
 			Role = role;
 			Password = password;
+			RootPath = rootPath;
 			if (!IsLocal) {
 				this.socket = socket;
 				if (!OS.IsMono) {
@@ -61,7 +66,9 @@ namespace MonoTools.Library {
 			if (IsLocal) {
 				if (Role == Roles.Client) server.Enqueue(msg);
 				else client.Enqueue(msg);
+				logger.Trace($"Message \"{msg.Command}\" sent.");
 			} else {
+				msg.SetSecurityToken(this);
 				var m = new MemoryStream();
 				serializer.Serialize(m, msg);
 				writer.Write((Int32)m.Length);
@@ -69,27 +76,31 @@ namespace MonoTools.Library {
 				if (msg is IExtendedMessage) {
 					((IExtendedMessage)msg).Send(this);
 				}
+				logger.Trace($"Message \"{msg.Command}\" sent.");
 			}
 		}
 
 		public virtual Message Receive() {
-			try {
-				lock (this) if (buffer.Count > 0) return buffer.Pop();
-				if (IsLocal) {
-					if (Role == Roles.Client) return client.Dequeue();
-					else return server.Dequeue();
-				}
-				var len = reader.ReadInt32();
-				var buf = new byte[len];
-				//while (socket.Available <= 0) System.Threading.Thread.Sleep(10);
-				reader.Read(buf, 0, len);
-				var m = new MemoryStream(buf);
-				var msg = (Message)serializer.Deserialize(m);
-				if (msg is IExtendedMessage) {
-					((IExtendedMessage)msg).Receive(this);
-				}
-				return msg;
-			} catch { return null; }
+			lock (this) if (buffer.Count > 0) return buffer.Pop();
+			if (IsLocal) {
+				if (Role == Roles.Client) return client.Dequeue();
+				else return server.Dequeue();
+			}
+			var len = reader.ReadInt32();
+			var buf = new byte[len];
+			//while (socket.Available <= 0) System.Threading.Thread.Sleep(10);
+			reader.Read(buf, 0, len);
+			var m = new MemoryStream(buf);
+			var msg = (Message)serializer.Deserialize(m);
+			if (msg == null) throw new InvalidOperationException("Message must not be null.");
+			if (!msg.CheckSecurityToken(this)) {
+				SendAsync(new StatusMessage(Commands.InvalidPassword));
+				MonoDebugServer.InvalidPassword();
+			}
+			if (msg is IExtendedMessage) {
+				((IExtendedMessage)msg).Receive(this);
+			}
+			return msg;
 		}
 		public T Receive<T>() where T : Message, new() => Receive() as T;
 
@@ -97,11 +108,17 @@ namespace MonoTools.Library {
 			await Task.Run(() => Send(msg));
 		}
 
+		public async Task<Message> ReceiveAsync(CancellationToken token) {
+			return await Task.Run(() => Receive(), token);
+		}
 		public async Task<Message> ReceiveAsync() {
 			return await Task.Run(() => Receive());
 		}
 		public async Task<T> ReceiveAsync<T>() where T : Message, new() {
 			return await Task.Run(() => Receive<T>());
+		}
+		public async Task<T> ReceiveAsync<T>(CancellationToken token) where T : Message, new() {
+			return await Task.Run(() => Receive<T>(), token);
 		}
 
 		public void PushBack(Message msg) {

@@ -21,6 +21,7 @@ namespace MonoTools.Library {
 		public int DiscoveryPort = DefaultDiscoveryPort;
 
 		public string Password = null;
+		public static int InvalidPasswordAttempts = 0;
 
 		public static readonly Logger logger = LogManager.GetCurrentClassLogger();
 		private readonly CancellationTokenSource cts = new CancellationTokenSource();
@@ -45,7 +46,7 @@ namespace MonoTools.Library {
 			discoveryPort = DefaultDiscoveryPort;
 		}
 
-		public string Which(string exe) {
+		public bool IsInstalled(string exe) {
 			var info = new System.Diagnostics.ProcessStartInfo("which") {
 				UseShellExecute = false,
 				CreateNoWindow = true,
@@ -55,10 +56,7 @@ namespace MonoTools.Library {
 			var p = System.Diagnostics.Process.Start(info);
 			p.WaitForExit();
 			while (!p.HasExited) System.Threading.Thread.Sleep(10);
-			if (p.ExitCode == 0) {
-				return p.StandardOutput.ReadToEnd();
-			}
-			return null;
+			return p.ExitCode == 0 && p.StandardOutput.BaseStream.Length > 0;
 		}
 
 		public MonoDebugServer(bool local = false, string ports = null, string password = null, string terminalTemplate = null) {
@@ -67,21 +65,23 @@ namespace MonoTools.Library {
 			Password = password;
 			if (!string.IsNullOrEmpty(Password)) logger.Info("Password protected");
 			Current = this;
-			if (terminalTemplate == null) {
-				if (Which("gnome-terminal") != null) TerminalTemplate = "gnome-terminal -x {0}";
-				else if (Which("lxterminal") != null) TerminalTemplate = "lxterminal -e {0}";
-				else if (Which("konsole") != null) TerminalTemplate = "konsole -e {0}";
-				else if (Which("xfce4-terminal") != null) TerminalTemplate = "xfce4-terminal -x {0}";
-				else TerminalTemplate = null;
-			} else {
-				switch (terminalTemplate) {
-				case "gnome": TerminalTemplate = "gnome-terminal -x {0}"; break;
-				case "lxe": TerminalTemplate = "lxterminal -e {0}"; break;
-				case "kde": TerminalTemplate = "konsole -e {0}"; break;
-				case "xfce4": TerminalTemplate = "xfce4-terminal -x {0}"; break;
-				default: TerminalTemplate = terminalTemplate; break;
+			if (!OS.IsWindows) {
+				if (terminalTemplate == null) {
+					if (IsInstalled("gnome-terminal")) TerminalTemplate = "gnome-terminal -x {0}";
+					else if (IsInstalled("lxterminal")) TerminalTemplate = "lxterminal -e {0}";
+					else if (IsInstalled("konsole")) TerminalTemplate = "konsole -e {0}";
+					else if (IsInstalled("xfce4-terminal")) TerminalTemplate = "xfce4-terminal -x {0}";
+					else TerminalTemplate = null;
+				} else {
+					switch (terminalTemplate) {
+					case "gnome": TerminalTemplate = "gnome-terminal -x {0}"; break;
+					case "lxe": TerminalTemplate = "lxterminal -e {0}"; break;
+					case "kde": TerminalTemplate = "konsole -e {0}"; break;
+					case "xfce4": TerminalTemplate = "xfce4-terminal -x {0}"; break;
+					default: TerminalTemplate = terminalTemplate; break;
+					}
 				}
-			}
+			} else TerminalTemplate = null;
 		}
 
 		public void Dispose() {
@@ -90,24 +90,38 @@ namespace MonoTools.Library {
 
 		public static MonoDebugServer Current { get; private set; }
 
+		public static void InvalidPassword() {
+			if (InvalidPasswordAttempts++ >= 5) {
+				logger.Error($"Wait 5 minutes after {InvalidPasswordAttempts} invalid password failures.");
+				System.Threading.Thread.Sleep(TimeSpan.FromMinutes(5));
+				MonoDebugServer.InvalidPasswordAttempts = 0;
+			}
+			throw new InvalidOperationException("Invalid password.");
+		}
+
 		public void Start() {
 			Current = this;
 			if (!IsLocal) {
 				tcp = new TcpListener(IPAddress.Any, MessagePort);
 				tcp.Start();
+				ListenForCancelKey();
 			}
-			ListenForCancelKey();
-			listeningTask = Task.Run(() => StartListening(cts.Token), cts.Token);
+			listeningTask = Task.Run(() => {
+				try {
+					StartListening(cts.Token);
+				} catch { }
+			}, cts.Token);
 		}
 
 		private CancellationTokenSource consoleCancellationToken = new CancellationTokenSource();
 
 		public void ListenForCancelKey() {
+			string input;
 			Task.Run((Action)(() => {
 				while (true) {
 					bool doSleep;
 					try {
-						Console.ReadLine();
+						input = Console.ReadLine();
 						break;
 					} catch (IOException) {
 						// This might happen on appdomain unload
@@ -126,12 +140,14 @@ namespace MonoTools.Library {
 		}
 
 		public void SuspendCancelKey() {
-			consoleCancellationToken.Cancel();
+			if (!IsLocal) consoleCancellationToken.Cancel();
 		}
 
 		public void ResumeCancelKey() {
-			consoleCancellationToken = new CancellationTokenSource();
-			ListenForCancelKey();
+			if (!IsLocal) {
+				consoleCancellationToken = new CancellationTokenSource();
+				ListenForCancelKey();
+			}
 		}
 
 		private void StartListening(CancellationToken token) {
@@ -192,7 +208,7 @@ namespace MonoTools.Library {
 
 						while (true) {
 							token.ThrowIfCancellationRequested();
-							byte[] bytes = Encoding.ASCII.GetBytes("MonoServer");
+							byte[] bytes = Encoding.ASCII.GetBytes($"MonoServer {App.Version}");
 							client.Send(bytes, bytes.Length, ip);
 							Thread.Sleep(100);
 						}

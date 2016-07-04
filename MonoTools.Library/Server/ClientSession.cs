@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Linq;
 using NLog;
 
@@ -19,12 +20,14 @@ namespace MonoTools.Library {
 		public int DebuggerPort => Server.DebuggerPort;
 		public string Password => Server.Password;
 		public const bool CanCompress = true;
+		private readonly CancellationTokenSource Cancel = new CancellationTokenSource();
 
 		public ClientSession(Socket socket, MonoDebugServer server) {
 			Server = server;
 			if (socket != null) remoteEndpoint = ((IPEndPoint)socket.RemoteEndPoint).Address;
-			RootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MonoToolsServer", remoteEndpoint.ToString());
-			communication = new TcpCommunication(socket,CanCompress, Roles.Server, IsLocal, Password);
+			RootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MonoToolsServer");
+			if (remoteEndpoint != null) RootPath = Path.Combine(RootPath, remoteEndpoint.ToString());
+			communication = new TcpCommunication(socket, CanCompress, Roles.Server, IsLocal, Password, RootPath);
 			communication.Progress = progress => {
 				const int Width = 60;
 				Console.CursorLeft = 0;
@@ -40,46 +43,35 @@ namespace MonoTools.Library {
 			};
 		}
 
-		public void HandleSession() {
+		public async void HandleSession() {
 			try {
 				logger.Trace("New Session from {0}", remoteEndpoint?.ToString() ?? "localhost");
 
 				while (communication.IsConnected) {
-					if (process != null && process.HasExited)
+					if (process != null && process.HasExited) {
+						process = null;
 						return;
+					}
 
-					//communication.SendAsync(new StatusMessage { Command = Commands.Info });
-
-					var msg = communication.Receive<CommandMessage>();
-
-					if (msg == null) return;
+					var msg = await communication.ReceiveAsync(Cancel.Token);
+					if (Cancel.IsCancellationRequested) return;
 
 					switch (msg.Command) {
-					case Commands.Execute:
-						var dbg = msg as ExecuteMessage;
-						if (dbg != null) {
-							if (!dbg.CheckSecurityToken(communication)) {
-								communication.SendAsync(new StatusMessage { Command = Commands.InvalidPassword });
-#if !DEBUG
-								logger.Error("Wait one minute after invalid password failure.");
-								System.Threading.Thread.Sleep(TimeSpan.FromMinutes(1));
-#endif
-							} else {
-								StartExecuting(dbg);
-							}
-						}
-						break;
-					case Commands.Info: return;
-					case Commands.Shutdown:
-						logger.Trace("Shutdown-Message received");
-						return;
+					case Commands.Execute: StartExecuting((ExecuteMessage)msg); break;
+					case Commands.Info: communication.SendAsync(new StatusMessage(Commands.Info)); return;
+					case Commands.Exit: return;
 					}
 				}
 			} catch (Exception ex) {
 				logger.Error(ex);
+				try { communication.SendAsync(new StatusMessage(ex));
+				} catch { }
 			} finally {
-				if (process != null && !process.HasExited)
+				if (process != null && !process.HasExited) {
 					process.Kill();
+					process.WaitForExit(1000);
+					process = null;
+				}
 			}
 		}
 
@@ -91,7 +83,7 @@ namespace MonoTools.Library {
 
 			if (!msg.HasMdbs) {
 				var generator = new Pdb2MdbGenerator();
-				string binaryDirectory = msg.ApplicationType == ApplicationTypes.DesktopApplication ? msg.RootPath : Path.Combine(msg.RootPath, "bin");
+				string binaryDirectory = msg.ApplicationType == ApplicationTypes.WebApplication ? Path.Combine(msg.RootPath, "bin") : msg.RootPath; 
 				generator.GeneratePdb2Mdb(binaryDirectory);
 			}
 
@@ -99,10 +91,6 @@ namespace MonoTools.Library {
 		}
 
 		private void StartMono(ExecuteMessage msg) {
-			if (OS.IsMono) {
-				Console.BackgroundColor = ConsoleColor.Black;
-				Console.Clear();
-			}
 			MonoDebugServer.Current.SuspendCancelKey();
 
 			msg.WorkingDirectory = string.IsNullOrEmpty(msg.WorkingDirectory) ? msg.RootPath : msg.WorkingDirectory;
@@ -120,7 +108,7 @@ namespace MonoTools.Library {
 			lock (this) {
 				if (!startedSent) {
 					startedSent = true;
-					communication.SendAsync(new StatusMessage() { Command = Commands.Started });
+					communication.SendAsync(new StatusMessage(Commands.Started));
 				}
 			}
 		}
@@ -128,7 +116,10 @@ namespace MonoTools.Library {
 		private void SendOutput(string text) {
 			EnsureSentStarted();
 			logger.Info(text);
-			if (text != null) lock (communication) communication.SendAsync(new ConsoleOutputMessage() { Text = text });
+			if (text != null) {
+				if (!IsLocal) Console.WriteLine(text);
+				lock (communication) communication.SendAsync(new StatusMessage(Commands.Info) { Output = text });
+			}
 		}
 
 		private void MonoProcessStarted(object sender, EventArgs e) {
@@ -137,6 +128,8 @@ namespace MonoTools.Library {
 		}
 
 		private void MonoExited(object sender, EventArgs e) {
+			Console.BackgroundColor = ConsoleColor.DarkBlue;
+
 			startedSent = false;
 			logger.Info("Program closed: " + process.ExitCode);
 			try {
@@ -144,6 +137,11 @@ namespace MonoTools.Library {
 			} catch (Exception ex) {
 				logger.Trace("Cant delete {0} - {1}", RootPath, ex.Message);
 			}
+
+			Cancel.Cancel();
+
+			lock (communication) communication.SendAsync(new StatusMessage(Commands.Exit) { ExitCode = process.ExitCode });
+
 			MonoDebugServer.Current.ResumeCancelKey();
 		}
 	}

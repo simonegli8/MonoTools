@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace MonoTools.Library {
 
@@ -14,9 +15,64 @@ namespace MonoTools.Library {
 		public Action<string> Output = null;
 		public ExecuteMessage Message = null;
 		public event EventHandler ProcessStarted;
+		public bool CreateWindow = false;
 		public MonoDebugServer Server;
 
 		public MonoProcess(ExecuteMessage msg, MonoDebugServer server) { Message = msg; Server = server; }
+
+		public Process Start(string exe, Action<StringBuilder> arguments = null, Action<ProcessStartInfo> infos = null) {
+			var args = new StringBuilder();
+			string template = null;
+
+			if (!Directory.Exists(Message.WorkingDirectory)) Directory.CreateDirectory(Message.WorkingDirectory);
+
+			if (Message.ApplicationType != ApplicationTypes.ConsoleApplication) RedirectOutput = true;
+
+			CreateWindow = false;
+			if (!OS.IsWindows && !RedirectOutput && !string.IsNullOrEmpty(Server.TerminalTemplate)) { // use TerminalTemplate to start process
+				var p = Server.TerminalTemplate.IndexOf(' ');
+				if (p > 0) {
+					exe = Server.TerminalTemplate.Substring(0, p);
+					template = Server.TerminalTemplate.Substring(p+1);
+				} else {
+					args.Append(exe);
+					exe = Server.TerminalTemplate;
+				}
+				CreateWindow = true;
+			} else if (OS.IsWindows && !RedirectOutput) {
+				CreateWindow = true;
+			} else {
+				Console.BackgroundColor = ConsoleColor.Black;
+				Console.Clear();
+			}
+
+			var pa = GetProcessArgs();
+			if (pa != "") {
+				if (args.Length > 0) args.Append(" ");
+				args.Append(pa);
+			}
+			arguments?.Invoke(args);
+
+			ProcessStartInfo procInfo = GetProcessStartInfo(exe);
+			procInfo.Arguments = template == null ? args.ToString() : string.Format(template, args.ToString());
+			infos?.Invoke(procInfo);
+
+			process = new System.Diagnostics.Process();
+			process.StartInfo = procInfo;
+			process.EnableRaisingEvents = true;
+			if (RedirectOutput) {
+				process.ErrorDataReceived += (sender, data) => Output(data.Data + "\r\n");
+				process.OutputDataReceived += (sender, data) => Output(data.Data + "\r\n");
+				process.BeginOutputReadLine();
+			} else {
+				procInfo.UseShellExecute = true;
+			}
+
+			process.Start();
+
+			RaiseProcessStarted();
+			return process;
+		}
 
 		public abstract Process Start();
 
@@ -38,7 +94,7 @@ namespace MonoTools.Library {
 				RedirectStandardError = RedirectOutput,
 				RedirectStandardOutput = RedirectOutput,
 				UseShellExecute = false,
-				CreateNoWindow = false,
+				CreateNoWindow = !CreateWindow,
 				WindowStyle = ProcessWindowStyle.Normal
 			};
 			return procInfo;
@@ -52,12 +108,8 @@ namespace MonoTools.Library {
 		}
 
 		public static MonoProcess Start(ExecuteMessage msg, MonoDebugServer server) {
-			if (msg.ApplicationType == ApplicationTypes.DesktopApplication)
-				return new MonoDesktopProcess(msg, server);
-			if (msg.ApplicationType == ApplicationTypes.WebApplication)
-				return new MonoWebProcess(msg, server);
-
-			throw new Exception("Unknown ApplicationType");
+			if (msg.ApplicationType == ApplicationTypes.WebApplication) return new MonoWebProcess(msg, server);
+			return new MonoDesktopProcess(msg, server);
 		}
 	}
 }

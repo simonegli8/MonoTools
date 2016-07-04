@@ -34,6 +34,14 @@ namespace MonoTools.VisualStudio {
 			}
 		}
 
+		[System.Diagnostics.Conditional("DEBUG")]
+		void Dump(Project proj) {
+			System.Diagnostics.Debugger.Log(1, "", "project.Properties");
+			Dump(proj.Properties);
+			System.Diagnostics.Debugger.Log(1, "", "proj.ConfigurationManager.ActiveConfiguration.Properties");
+			Dump(proj.ConfigurationManager.ActiveConfiguration.Properties);
+		}
+
 		public async void Start() {
 			try {
 				BuildSolution();
@@ -49,7 +57,7 @@ namespace MonoTools.VisualStudio {
 				Project startup = GetStartupProject();
 				var props = startup.ConfigurationManager.ActiveConfiguration.Properties;
 
-				Dump(props);
+				//Dump(startup);
 
 				bool isWeb = ((object[])startup.ExtenderNames).Any(x => x.ToString() == "WebApplication") || startup.Object is VsWebSite.VSWebSite;
 
@@ -122,7 +130,7 @@ namespace MonoTools.VisualStudio {
 				}
 			} catch (Exception ex) {
 				logger.Error(ex);
-				if (server != null) server.Stop();
+				if (Server != null) Server.Stop();
 				MessageBox.Show(ex.Message, "MonoTools.Debugger", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
@@ -153,25 +161,25 @@ namespace MonoTools.VisualStudio {
 				StartDebug(host);
 			} catch (Exception ex) {
 				logger.Error(ex);
-				if (server != null) server.Stop();
+				if (Server != null) Server.Stop();
 				MessageBox.Show(ex.Message, "MonoTools.Debugger", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
 
-		MonoDebugServer server = null;
+		public static MonoDebugServer Server = null;
 
 		public async void StartDebug(string host) {
 			try {
-				if (server != null) {
-					server.Stop();
-					server = null;
+				if (Server != null) {
+					Server.Stop();
+					Server = null;
 				}
 
 				BuildSolution();
 
 				if (host == null) {
-					server = new MonoDebugServer(true);
-					server.Start();
+					Server = new MonoDebugServer(true);
+					Server.Start();
 					await AttachDebugger(Library.MonoProcess.GetLocalIp().ToString(), true);
 				} else if (host == "*" || host == "?" || host == "") StartSearching();
 				else {
@@ -179,7 +187,7 @@ namespace MonoTools.VisualStudio {
 				}
 			} catch (Exception ex) {
 				logger.Error(ex);
-				if (server != null) server.Stop();
+				if (Server != null) Server.Stop();
 				MessageBox.Show(ex.Message, "MonoTools.Debugger", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
@@ -214,8 +222,9 @@ namespace MonoTools.VisualStudio {
 			string arguments = null;
 			Project startup = GetStartupProject();
 			var props = startup.ConfigurationManager.ActiveConfiguration.Properties;
-			//Dump(props);
 
+			//Dump(startup);
+			
 			bool isWeb = ((object[])startup.ExtenderNames).Any(x => x.ToString() == "WebApplication") || startup.Object is VsWebSite.VSWebSite;
 
 			var isNet4 = true;
@@ -238,7 +247,6 @@ namespace MonoTools.VisualStudio {
 			var ports = Options.Ports;
 			var password = Options.Password;
 
-			ApplicationTypes appType = isWeb ? ApplicationTypes.WebApplication : ApplicationTypes.DesktopApplication;
 			if (isWeb) {
 				outputDirectory = Path.GetDirectoryName(outputDirectory);
 				var ext = (WAProjectExtender)startup.Extender["WebApplication"];
@@ -265,7 +273,12 @@ namespace MonoTools.VisualStudio {
 				}
 			} else {
 
-				await StartDebugger(target, arguments, ApplicationTypes.DesktopApplication, framework, outputDirectory, workingDirectory, null, local, host, ports, password);
+				var outputType = startup.Properties.Get("OutputType"); // output type (0: windows app, 1: console app, 2: class lib)
+				if (outputType == "2") throw new InvalidOperationException("Cannot start a class library.");
+
+				var appType = outputType == "0" ? ApplicationTypes.WindowsApplication : ApplicationTypes.ConsoleApplication;
+
+				await StartDebugger(target, arguments, appType, framework, outputDirectory, workingDirectory, null, local, host, ports, password);
 
 				if (action == "2") System.Diagnostics.Process.Start(url);
 				else if (action == "1") {
@@ -295,23 +308,29 @@ namespace MonoTools.VisualStudio {
 			await session.ExecuteAsync(targetExe, arguments, appType, framework, Path.GetFullPath(outputDir), workingDir, url);
 			// read response
 			var response = await session.WaitForAnswerAsync();
-			if (!(response is StatusMessage)) throw new InvalidOperationException("Wrong response message type.");
+			if (!(response is StatusMessage)) throw new InvalidOperationException($"Wrong response message type {response.GetType().FullName}.");
 			var status = (StatusMessage)response;
 			if (status.Command == Library.Commands.InvalidPassword) {
 				throw new InvalidOperationException("Invalid debug server password.");
+			} else if (status.Command == Library.Commands.Exception) {
+				throw new Exception($"Server Exception:\r\n{status.ExceptionMessage}\r\n{status.StackTrace}");
 			} else if (status.Command != Library.Commands.Started) {
-				throw new Exception("Error starting remote process.");
+				throw new Exception($"Invalid response \"{status.Command}\" from server.");
 			}
 
 			// handle console output responses
 			consoleTask = Task.Run(async () => { 
 				try {
-					var msg = await session.WaitForAnswerAsync();
-					while (msg is ConsoleOutputMessage) {
-						System.Diagnostics.Debugger.Log(1, "", ((ConsoleOutputMessage)msg).Text);
-						msg = await session.WaitForAnswerAsync();
+					var msg = await session.WaitForAnswerAsync<StatusMessage>();
+					while (msg?.Command == Library.Commands.Info) {
+						System.Diagnostics.Debugger.Log(1, "", msg.Output);
+						msg = await session.WaitForAnswerAsync<StatusMessage>();
 					}
-					session.PushBack(msg);
+					if (msg?.Command == Library.Commands.Exception) {
+						logger.Error($"Server Exception:\r\n{msg.ExceptionMessage}\r\n{msg.StackTrace}");
+					} else if (msg?.Command == Library.Commands.Exit) {
+						DebuggedProcess.Instance.Detach();
+					} else	session.PushBack(msg);
 				} catch { }
 			});
 

@@ -31,7 +31,6 @@ namespace MonoTools.VisualStudio {
 	[Guid(Guids.MonoToolsPkgString)]
 	public sealed class VSPackage : Package, IDisposable {
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-		private MonoDebugServer server = new MonoDebugServer();
 		private Services services;
 
 		protected override void Initialize() {
@@ -264,7 +263,10 @@ namespace MonoTools.VisualStudio {
 
 			if (disposing) {
 				//Dispose managed resources
-				this.server.Dispose();
+				if (Services.Server != null) {
+					Services.Server.Dispose();
+					Services.Server = null;
+				}
 			}
 
 			//Dispose unmanaged resources here.

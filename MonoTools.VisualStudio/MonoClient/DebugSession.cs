@@ -13,7 +13,6 @@ namespace MonoTools.VisualStudio.MonoClient {
 
 		private readonly TimeSpan Delay = TimeSpan.FromMinutes(5);
 		private readonly TcpCommunication communication;
-		string rootPath;
 
 		public DebugSession(DebugClient debugClient, Socket socket, bool compress = false) {
 			Client = debugClient;
@@ -45,7 +44,7 @@ namespace MonoTools.VisualStudio.MonoClient {
 				Debug = true,
 				LocalPath = rootDirectory
 			};
-			if (!communication.IsLocal) msg.Files.AddFolder(rootPath);
+			if (!communication.IsLocal) msg.Files.AddFolder(rootDirectory);
 
 			communication.RootPath = rootDirectory;
 			communication.Send(msg);
@@ -80,7 +79,7 @@ namespace MonoTools.VisualStudio.MonoClient {
 
 			var msg = new ExecuteMessage() {
 				Command = Commands.Upgrade,
-				ApplicationType = ApplicationTypes.DesktopApplication,
+				ApplicationType = ApplicationTypes.ConsoleApplication,
 				Framework = Frameworks.Net4,
 				Executable = setupexe,
 				Arguments = args.ToString(),
@@ -105,6 +104,14 @@ namespace MonoTools.VisualStudio.MonoClient {
 			if (res == delay) throw new Exception("Did not receive an answer in time...");
 			throw new Exception("Cant start debugging");
 		}
+
+		public async Task<T> WaitForAnswerAsync<T>() where T: Message, new() {
+			var msg = await WaitForAnswerAsync();
+			if (msg is T) return (T)msg;
+			PushBack(msg);
+			return null;
+		}
+
 
 		public void PushBack(Message msg) => communication.PushBack(msg);
 

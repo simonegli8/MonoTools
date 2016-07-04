@@ -238,6 +238,7 @@
       <SubType>Designer</SubType>
       <Generator>VsixManifestGenerator</Generator>
       <LastGenOutput>source.extension.resx</LastGenOutput>
+      <CustomToolNamespace>MonoTools</CustomToolNamespace>
     </None>
   </ItemGroup>
   <ItemGroup>
