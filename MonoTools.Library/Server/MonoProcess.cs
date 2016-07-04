@@ -32,6 +32,7 @@ namespace MonoTools.Library {
 			if (!OS.IsWindows && !RedirectOutput && !string.IsNullOrEmpty(Server.TerminalTemplate)) { // use TerminalTemplate to start process
 				var p = Server.TerminalTemplate.IndexOf(' ');
 				if (p > 0) {
+					args.Append(exe);
 					exe = Server.TerminalTemplate.Substring(0, p);
 					template = Server.TerminalTemplate.Substring(p+1);
 				} else {

@@ -98,7 +98,7 @@ namespace MonoTools.Library {
 			proc.ProcessStarted += MonoProcessStarted;
 			proc.Output = SendOutput;
 			process = proc.Start();
-			logger.Trace($"{proc.GetType().Name} started: \"{proc.process.StartInfo.FileName}\" {proc.process.StartInfo.Arguments}");
+			logger.Trace($"{proc.GetType().Name} started: {proc.process.StartInfo.FileName} {proc.process.StartInfo.Arguments}");
 			process.Exited += MonoExited;
 			EnsureSentStarted();
 		}

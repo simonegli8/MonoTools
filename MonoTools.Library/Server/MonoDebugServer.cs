@@ -56,7 +56,7 @@ namespace MonoTools.Library {
 			var p = System.Diagnostics.Process.Start(info);
 			p.WaitForExit();
 			while (!p.HasExited) System.Threading.Thread.Sleep(10);
-			return p.ExitCode == 0 && p.StandardOutput.BaseStream.Length > 0;
+			return p.ExitCode == 0 && p.StandardOutput.BaseStream.ReadByte() != -1;
 		}
 
 		public MonoDebugServer(bool local = false, string ports = null, string password = null, string terminalTemplate = null) {
@@ -119,10 +119,10 @@ namespace MonoTools.Library {
 			string input;
 			Task.Run((Action)(() => {
 				while (true) {
-					bool doSleep;
+					bool doSleep = false;
 					try {
 						input = Console.ReadLine();
-						break;
+						if (input != null) break;
 					} catch (IOException) {
 						// This might happen on appdomain unload
 						// until the previous threads are terminated.
@@ -131,8 +131,7 @@ namespace MonoTools.Library {
 						doSleep = true;
 					}
 
-					if (doSleep)
-						Thread.Sleep(500);
+					Thread.Sleep(doSleep ? 500 : 0);
 				}
 				Stop();
 				Environment.Exit(0);
