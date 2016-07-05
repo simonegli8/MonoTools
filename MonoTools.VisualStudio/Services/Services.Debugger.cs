@@ -321,7 +321,7 @@ namespace MonoTools.VisualStudio {
 			if (status.Command == Library.Commands.InvalidPassword) {
 				throw new InvalidOperationException("Invalid debug server password.");
 			} else if (status.Command == Library.Commands.Exception) {
-				throw new Exception($"Server Exception:\r\n{status.ExceptionType}\r\n{status.ExceptionMessage}\r\n{status.StackTrace}"); 
+				throw new Exception($"Server Exception:\r\n{status.ExceptionType}\r\n{status.ExceptionMessage}\r\n{status.StackTrace}");
 			} else if (status.Command != Library.Commands.Started) {
 				throw new Exception($"Invalid response \"{status.Command}\" from server.");
 			}
@@ -332,7 +332,11 @@ namespace MonoTools.VisualStudio {
 					var msg = await session.WaitForAnswerAsync<StatusMessage>(cancel.Token);
 					if (cancel.IsCancellationRequested) return;
 					while (msg?.Command == Library.Commands.Info) {
-						System.Diagnostics.Debugger.Log(1, "", msg.Output);
+						var text = msg.OutputText ?? msg.ErrorText;
+						if (!string.IsNullOrEmpty(text)) {
+							Output.Text(text);
+							Debug.Write(text);
+						}
 						msg = await session.WaitForAnswerAsync<StatusMessage>(cancel.Token);
 						if (cancel.IsCancellationRequested) return;
 					}

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Reflection;
+using System.IO.Pipes;
 
 namespace MonoTools.Library {
 
@@ -17,28 +19,26 @@ namespace MonoTools.Library {
 		public event EventHandler ProcessStarted;
 		public bool CreateWindow = false;
 		public MonoDebugServer Server;
+		public ClientSession Session;
+		public bool Terminal;
 
-		public MonoProcess(ExecuteMessage msg, MonoDebugServer server) { Message = msg; Server = server; }
+		public MonoProcess(ExecuteMessage msg, ClientSession session, MonoDebugServer server) { Message = msg; Server = server; Session = session; }
 
 		public Process Start(string exe, Action<StringBuilder> arguments = null, Action<ProcessStartInfo> infos = null) {
 			var args = new StringBuilder();
-			string template = null;
+			var template = Server.TerminalTemplate;
+			string terminal = null;
+			string pipes = null;
 
 			if (!Directory.Exists(Message.WorkingDirectory)) Directory.CreateDirectory(Message.WorkingDirectory);
 
 			if (Message.ApplicationType != ApplicationTypes.ConsoleApplication) RedirectOutput = true;
 
+			var server = new Uri(Assembly.Load("MonoTools.Server").CodeBase).LocalPath;
+
 			CreateWindow = false;
-			if (!OS.IsWindows && !RedirectOutput && !string.IsNullOrEmpty(Server.TerminalTemplate)) { // use TerminalTemplate to start process
-				var p = Server.TerminalTemplate.IndexOf(' ');
-				if (p > 0) {
-					args.Append(exe);
-					exe = Server.TerminalTemplate.Substring(0, p);
-					template = Server.TerminalTemplate.Substring(p+1);
-				} else {
-					args.Append(exe);
-					exe = Server.TerminalTemplate;
-				}
+			if (!OS.IsWindows && !string.IsNullOrEmpty(Server.TerminalTemplate)) { // use TerminalTemplate to start process
+				Terminal = true;
 				CreateWindow = true;
 			} else if (OS.IsWindows && !RedirectOutput) {
 				CreateWindow = true;
@@ -55,20 +55,9 @@ namespace MonoTools.Library {
 
 			process = new System.Diagnostics.Process();
 			process.StartInfo = procInfo;
-			process.EnableRaisingEvents = true;
-			if (RedirectOutput) {
-				process.ErrorDataReceived += (sender, data) => Output(data.Data + "\r\n");
-				process.OutputDataReceived += (sender, data) => Output(data.Data + "\r\n");
-			} else {
-				procInfo.UseShellExecute = true;
-			}
+			process.EnableRaisingEvents = false;
 
 			process.Start();
-
-			if (RedirectOutput) {
-				process.BeginOutputReadLine();
-				process.BeginErrorReadLine();
-			}
 
 			RaiseProcessStarted();
 

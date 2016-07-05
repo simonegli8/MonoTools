@@ -63,6 +63,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Posix.4.0.0.0\lib\net40\Mono.Posix.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c">
@@ -76,9 +80,11 @@
     <Compile Include="Async.cs" />
     <Compile Include="ConcurrentQueue.cs" />
     <Compile Include="Encrpytion.cs" />
+    <Compile Include="ConsoleStream.cs" />
     <Compile Include="OS.cs" />
     <Compile Include="PipeQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ConsolePipes.cs" />
     <Compile Include="StreamExtension.cs" />
     <Compile Include="SubStream.cs" />
     <Compile Include="ExtensionMethods.cs" />
@@ -92,6 +98,7 @@
     <Compile Include="Server\Pdb2MdbGenerator.cs" />
     <Compile Include="Server\MonoDebugServer.cs" />
     <Compile Include="TcpCommunication.cs" />
+    <Compile Include="Terminal.cs" />
     <Compile Include="TraceRoute.cs" />
   </ItemGroup>
   <ItemGroup>

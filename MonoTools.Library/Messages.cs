@@ -279,7 +279,8 @@ namespace MonoTools.Library {
 		public StatusMessage(): base(Commands.Info) { }
 		public StatusMessage(Commands command): base(command) { }
 		public StatusMessage(Exception ex) : base(Commands.Exception) { HasException = true; ExceptionType = ex.GetType().FullName; ExceptionMessage = ex.Message; StackTrace = ex.StackTrace; }
-		public string Output;
+		public string OutputText;
+		public string ErrorText;
 		public bool HasException;
 		public string ExceptionType;
 		public string ExceptionMessage;

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Text;
 using System.IO;
+using System.IO.Pipes;
 
-namespace MonoTools.Debugger.Setup {
+namespace MonoTools.Server.Setup {
 	public class Program {
 
 		public static void Main(string[] args) {
@@ -27,7 +29,6 @@ the password in the MonoTools VisualStudio options.");
 
 			Installer.Configure(args);
 			Installer.Install();
-			
 		}
 	}
 }

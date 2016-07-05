@@ -23,16 +23,23 @@ the server as service, so it's password protected. You must also set
 the password in the MonoTools VisualStudio options.");
 			}
 
-			var ports = args.FirstOrDefault(a => a.StartsWith("-ports="))?.Substring("-ports=".Length);
-			var password = args.FirstOrDefault(a => a.StartsWith("-password="))?.Substring("-password=".Length);
-			var terminalTemplate = args.FirstOrDefault(a => a.StartsWith("-termtempl="))?.Substring("-termtempl=".Length);
 
-			MonoLogger.Setup();
+			var pipes = args.FirstOrDefault(a => a == "-console=")?.Substring("-console=".Length);
 
-			using (var server = new MonoDebugServer(false, ports, password, terminalTemplate)) {
-				server.StartAnnouncing();
-				server.Start();
-				server.WaitForExit();
+			if (pipes != null) ConsolePipes.StartClient(pipes);
+			else {
+
+				var ports = args.FirstOrDefault(a => a.StartsWith("-ports="))?.Substring("-ports=".Length);
+				var password = args.FirstOrDefault(a => a.StartsWith("-password="))?.Substring("-password=".Length);
+				var terminalTemplate = args.FirstOrDefault(a => a.StartsWith("-termtempl="))?.Substring("-termtempl=".Length);
+
+				MonoLogger.Setup();
+
+				using (var server = new MonoDebugServer(false, ports, password, terminalTemplate)) {
+					server.StartAnnouncing();
+					server.Start();
+					server.WaitForExit();
+				}
 			}
 		}
 	}

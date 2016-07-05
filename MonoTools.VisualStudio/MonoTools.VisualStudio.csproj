@@ -194,6 +194,7 @@
     <Compile Include="VisualStudio\MonoToolsInstaller.cs" />
     <Compile Include="VisualStudio\MonoToolsOptionsDialogPage.cs" />
     <Compile Include="VisualStudio\Options.cs" />
+    <Compile Include="VisualStudio\Output.cs" />
     <Compile Include="VisualStudio\PkgCmdID.cs" />
     <Compile Include="VisualStudio\StatusBar.cs" />
     <Compile Include="VisualStudio\VSPackage.cs" />

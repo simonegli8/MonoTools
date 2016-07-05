@@ -9,7 +9,7 @@ using NLog;
 
 namespace MonoTools.Library {
 
-	internal class ClientSession {
+	public class ClientSession {
 		private Process process;
 		private readonly TcpCommunication communication;
 		private readonly Logger logger = LogManager.GetCurrentClassLogger();
@@ -98,30 +98,32 @@ namespace MonoTools.Library {
 			proc.ProcessStarted += MonoProcessStarted;
 			proc.Output = SendOutput;
 			process = proc.Start();
+
+			process.Exited += MonoExited;
 			logger.Trace($"{proc.GetType().Name} started: {proc.process.StartInfo.FileName} {proc.process.StartInfo.Arguments}");
-			//TODO doesn't work on mono, process.Exit get's fired too early with custom terminal.
-			if (OS.IsWindows) process.Exited += MonoExited;
-			EnsureSentStarted();
+			SendStarted();
 		}
 
-		bool startedSent = false;
-		public void EnsureSentStarted() {
+		public void SendStarted() {
 			lock (this) {
-				if (!startedSent) {
-					startedSent = true;
-					communication.SendAsync(new StatusMessage(Commands.Started));
+				if (!Cancel.IsCancellationRequested) communication.Send(new StatusMessage(Commands.Started));
+			}
+		}
+
+		public void SendOutput(string text, Action<StatusMessage> set) {
+			lock (this) {
+				if (!string.IsNullOrEmpty(text)) {
+					logger.Info(text);
+					if (!IsLocal) Console.WriteLine(text);
+					var m = new StatusMessage(Commands.Info);
+					set(m);
+					communication.Send(m);
 				}
 			}
 		}
 
-		private void SendOutput(string text) {
-			if (text != null) {
-				EnsureSentStarted();
-				logger.Info(text);
-				if (!IsLocal) Console.WriteLine(text);
-				lock (communication) communication.SendAsync(new StatusMessage(Commands.Info) { Output = text });
-			}
-		}
+		public void SendOutput(string text) => SendOutput(text, m => m.OutputText = text);
+		public void SendError(string text) => SendOutput(text, m => m.ErrorText = text);
 
 		private void MonoProcessStarted(object sender, EventArgs e) {
 			var web = sender as MonoWebProcess;
@@ -129,21 +131,19 @@ namespace MonoTools.Library {
 		}
 
 		private void MonoExited(object sender, EventArgs e) {
-			EnsureSentStarted();
+			lock (this) {
+				Cancel.Cancel();
+				lock (communication) communication.SendAsync(new StatusMessage(Commands.Exit) { ExitCode = process.ExitCode });
+			}
 
 			if (!IsLocal) Console.BackgroundColor = ConsoleColor.DarkBlue;
 
-			startedSent = false;
 			logger.Info("Program closed: " + process.ExitCode);
 			try {
 				Directory.Delete(RootPath, true);
 			} catch (Exception ex) {
 				logger.Trace("Cant delete {0} - {1}", RootPath, ex.Message);
 			}
-
-			Cancel.Cancel();
-
-			lock (communication) communication.SendAsync(new StatusMessage(Commands.Exit) { ExitCode = process.ExitCode });
 
 			MonoDebugServer.Current.ResumeCancelKey();
 		}

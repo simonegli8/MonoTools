@@ -46,42 +46,13 @@ namespace MonoTools.Library {
 			discoveryPort = DefaultDiscoveryPort;
 		}
 
-		public bool IsInstalled(string exe) {
-			var info = new System.Diagnostics.ProcessStartInfo("which") {
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				RedirectStandardOutput = true,
-				Arguments = exe
-			};
-			var p = System.Diagnostics.Process.Start(info);
-			p.WaitForExit();
-			while (!p.HasExited) System.Threading.Thread.Sleep(10);
-			return p.ExitCode == 0 && p.StandardOutput.BaseStream.ReadByte() != -1;
-		}
-
 		public MonoDebugServer(bool local = false, string ports = null, string password = null, string terminalTemplate = null) {
 			IsLocal = local;
 			ParsePorts(ports, out MessagePort, out DebuggerPort, out DiscoveryPort);
 			Password = password;
 			if (!string.IsNullOrEmpty(Password)) logger.Info("Password protected");
 			Current = this;
-			if (!OS.IsWindows) {
-				if (terminalTemplate == null) {
-					if (IsInstalled("gnome-terminal")) TerminalTemplate = "gnome-terminal -x {0}";
-					else if (IsInstalled("lxterminal")) TerminalTemplate = "lxterminal -e {0}";
-					else if (IsInstalled("konsole")) TerminalTemplate = "konsole -e {0}";
-					else if (IsInstalled("xfce4-terminal")) TerminalTemplate = "xfce4-terminal -x {0}";
-					else TerminalTemplate = null;
-				} else {
-					switch (terminalTemplate) {
-					case "gnome": TerminalTemplate = "gnome-terminal -x {0}"; break;
-					case "lxe": TerminalTemplate = "lxterminal -e {0}"; break;
-					case "kde": TerminalTemplate = "konsole -e {0}"; break;
-					case "xfce4": TerminalTemplate = "xfce4-terminal -x {0}"; break;
-					default: TerminalTemplate = terminalTemplate; break;
-					}
-				}
-			} else TerminalTemplate = null;
+			TerminalTemplate = Terminal.Template(terminalTemplate);
 		}
 
 		public void Dispose() {

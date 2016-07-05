@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("MonoTools.Debugger.Setup")]
+[assembly: AssemblyTitle("MonoTools.Server.Setup")]
 

@@ -15,5 +15,19 @@ namespace MonoTools.Library {
 				return id == PlatformID.Win32NT || id == PlatformID.Win32S || id == PlatformID.Win32Windows || id == PlatformID.Xbox || id == PlatformID.WinCE;
 			}
 		}
+		public static bool IsInstalled(string exe) {
+			if (IsWindows) return false;
+
+			var info = new System.Diagnostics.ProcessStartInfo("which") {
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				Arguments = exe
+			};
+			var p = System.Diagnostics.Process.Start(info);
+			p.WaitForExit();
+			while (!p.HasExited) System.Threading.Thread.Sleep(10);
+			return p.ExitCode == 0 && p.StandardOutput.BaseStream.ReadByte() != -1;
+		}
 	}
 }

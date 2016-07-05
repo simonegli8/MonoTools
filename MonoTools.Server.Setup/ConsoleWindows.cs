@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.CSharp;
 using System.Dynamic;
 
-namespace MonoTools.Debugger.Setup {
+namespace MonoTools.Server.Setup {
 
 	public class Window: DynamicObject, IEnumerable<Window.Input> {
 

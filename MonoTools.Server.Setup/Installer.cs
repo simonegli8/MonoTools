@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Mono.Unix.Native;
 
-namespace MonoTools.Debugger.Setup {
+namespace MonoTools.Server.Setup {
 
 	public static class Installer {
 
@@ -102,7 +102,7 @@ namespace MonoTools.Debugger.Setup {
 			if (!Directory.Exists(logPath)) Directory.CreateDirectory(logPath);
 			Chown(LibPath); Chown(logPath);
 
-			using (var zip = Assembly.GetExecutingAssembly().GetManifestResourceStream("MonoTools.Debugger.Setup.Server.zip")) {
+			using (var zip = Assembly.GetExecutingAssembly().GetManifestResourceStream("MonoTools.Server.Setup.Server.zip")) {
 				Unzip(zip, LibPath);
 			}
 

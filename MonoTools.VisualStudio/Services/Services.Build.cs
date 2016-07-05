@@ -121,7 +121,7 @@ namespace MonoTools.VisualStudio {
 					project = activeSolutionProjects.GetValue(0) as Project;
 				}
 				if (project == null) {
-					outputWindowPane.OutputString("No project selected.");
+					outputWindowPane.OutputString("No project selected.\r\n");
 				} else {
 					string str = DetermineMonoPath();
 					string name = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
@@ -144,8 +144,7 @@ namespace MonoTools.VisualStudio {
 						proc.OutputDataReceived += (sender, a) => {
 							var line = a.Data;
 							text.WriteLine(line);
-							outputWindowPane.OutputString(line);
-							outputWindowPane.OutputString("\r\n");
+							outputWindowPane.OutputString(line+"\r\n");
 						};
 						proc.EnableRaisingEvents = true;
 						proc.Start();
