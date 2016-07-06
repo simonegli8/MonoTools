@@ -24,9 +24,9 @@ the password in the MonoTools VisualStudio options.");
 			}
 
 
-			var pipes = args.FirstOrDefault(a => a == "-console=")?.Substring("-console=".Length);
+			var pipes = args.FirstOrDefault(a => a == "-mirror=")?.Substring("-mirror=".Length);
 
-			if (pipes != null) ConsolePipes.StartClient(pipes);
+			if (pipes != null) ConsoleMirror.StartClient(pipes);
 			else {
 
 				var ports = args.FirstOrDefault(a => a.StartsWith("-ports="))?.Substring("-ports=".Length);

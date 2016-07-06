@@ -94,7 +94,7 @@ namespace MonoTools.Library {
 			MonoDebugServer.Current.SuspendCancelKey();
 
 			msg.WorkingDirectory = string.IsNullOrEmpty(msg.WorkingDirectory) ? msg.RootPath : msg.WorkingDirectory;
-			MonoProcess proc = MonoProcess.Start(msg, Server);
+			MonoProcess proc = MonoProcess.Start(msg, Server, this);
 			proc.ProcessStarted += MonoProcessStarted;
 			proc.Output = SendOutput;
 			process = proc.Start();

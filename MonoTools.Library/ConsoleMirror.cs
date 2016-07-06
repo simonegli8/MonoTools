@@ -12,7 +12,7 @@ using Mono.Unix.Native;
 
 namespace MonoTools.Library {
 
-	public class ConsolePipes: IDisposable {
+	public class ConsoleMirror : IDisposable {
 
 		public UnixStream Input;
 		public UnixStream Output;
@@ -20,9 +20,9 @@ namespace MonoTools.Library {
 		public CancellationTokenSource Cancel = new CancellationTokenSource();
 
 		public string Pipes => string.Join(",", Input.Handle, Output.Handle, Error.Handle);
-		public static ConsolePipes Parse(string pipes) {
+		public static ConsoleMirror Parse(string pipes) {
 			var a = pipes.Split(',').Select(t => int.Parse(t)).ToArray();
-			return new ConsolePipes { Input = new UnixStream(a[0]), Output = new UnixStream(a[1]), Error = new UnixStream(a[2]) };
+			return new ConsoleMirror { Input = new UnixStream(a[0]), Output = new UnixStream(a[1]), Error = new UnixStream(a[2]) };
 		}
 
 		bool closed = false;
@@ -58,43 +58,50 @@ namespace MonoTools.Library {
 			}
 		}
 
-		public static void StartServer(Process p, Action<ConsolePipes> terminal, ClientSession session, CancellationToken token) {
+		public static ConsoleMirror StartTerminalServer(Process p, ClientSession session, CancellationToken token) {
 
-			Task.Run(() => {
-				try {
-					if (terminal != null && !OS.IsWindows) {
+			if (OS.IsWindows) StartServer(p, session, token);
+			else {
 
-						ConsolePipes server, client;
+				ConsoleMirror server, client;
 
-						Create(out server, out client);
+				CreatePipes(out server, out client);
 
-						terminal(client);
-
+				Task.Run(() => {
+					try {
 						using (var output = new ConsoleStream(ConsoleStream.Channels.Output, session, p.StandardOutput.CurrentEncoding, server.Output))
 						using (var err = new ConsoleStream(ConsoleStream.Channels.Error, session, p.StandardError.CurrentEncoding, server.Error)) {
-
 							Task.Run(() => { try { p.StandardOutput.BaseStream.CopyTo(output); } catch { p.Close(); } }, token);
 							Task.Run(() => { try { p.StandardError.BaseStream.CopyTo(err); } catch { p.Close(); } }, token);
 							try { server.Input.CopyTo(p.StandardInput.BaseStream); } catch { p.Close(); }
 						}
-					} else {
-						using (var output = new ConsoleStream(ConsoleStream.Channels.Output, session, p.StandardOutput.CurrentEncoding, null))
-						using (var err = new ConsoleStream(ConsoleStream.Channels.Error, session, p.StandardError.CurrentEncoding, null)) {
-							Task.Run(() => { try { p.StandardError.BaseStream.CopyTo(err); } catch { } }, token);
-							try { p.StandardOutput.BaseStream.CopyTo(output); } catch { }
-						}
+					} catch { }
+				}, token);
+
+				return client;
+			}
+			return null;
+		}
+		
+
+		public static void StartServer(Process p, ClientSession session, CancellationToken token) {
+			Task.Run(() => {
+				try {
+					using (var output = new ConsoleStream(ConsoleStream.Channels.Output, session, p.StandardOutput.CurrentEncoding, null))
+					using (var err = new ConsoleStream(ConsoleStream.Channels.Error, session, p.StandardError.CurrentEncoding, null)) {
+						Task.Run(() => { try { p.StandardError.BaseStream.CopyTo(err); } catch { } }, token);
+						try { p.StandardOutput.BaseStream.CopyTo(output); } catch { }
 					}
 				} catch { }
 			}, token);
-
 		}
 
-		public static void Create(out ConsolePipes server, out ConsolePipes client) {
+		public static void CreatePipes(out ConsoleMirror server, out ConsoleMirror client) {
 			var input = UnixPipes.CreatePipes();
 			var output = UnixPipes.CreatePipes();
 			var err = UnixPipes.CreatePipes();
-			server = new ConsolePipes { Input = input.Reading, Output = output.Writing, Error = err.Writing };
-			client = new ConsolePipes { Input = input.Writing, Output = output.Reading, Error = err.Reading };
+			server = new ConsoleMirror { Input = input.Reading, Output = output.Writing, Error = err.Writing };
+			client = new ConsoleMirror { Input = input.Writing, Output = output.Reading, Error = err.Reading };
 		}
 	}
 }

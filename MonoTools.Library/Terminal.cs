@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Reflection;
+using System.IO;
+using System.Threading;
 
 namespace MonoTools.Library {
 
@@ -36,14 +39,14 @@ namespace MonoTools.Library {
 			case "xfce4": template = "xfce4-terminal -x {0}"; break;
 			case "xterm": template = "xterm -e \"{0}\""; break;
 			case "tilda": template = "tilda -e \"{0}\""; break;
-			case "terminaor")) template = "terminator -e \"{0}\""; break;
-			case "guake")) template = "guake -e \"{0}\""; break;
-			case "yakuake")) template = "yakuake -e \"{0}\""; break;
-			case "roxterm")) template = "roxxterm -e \"{0}\""; break;
-			case "eterm")) template = "eterm -e \"{0}\""; break;
-			case "rxvt")) template = "rcvt -e \"{0}\""; break;
-			case "wterm")) template = "wterm -e \"{0}\""; break;
-			case "lilyterm")) template = "lilyterm -e \"{0}\""; break;
+			case "terminaor": template = "terminator -e \"{0}\""; break;
+			case "guake": template = "guake -e \"{0}\""; break;
+			case "yakuake": template = "yakuake -e \"{0}\""; break;
+			case "roxterm": template = "roxxterm -e \"{0}\""; break;
+			case "eterm": template = "eterm -e \"{0}\""; break;
+			case "rxvt": template = "rcvt -e \"{0}\""; break;
+			case "wterm": template = "wterm -e \"{0}\""; break;
+			case "lilyterm": template = "lilyterm -e \"{0}\""; break;
 			default: break;
 			}
 			return template;
@@ -67,8 +70,11 @@ namespace MonoTools.Library {
 			Process.Start(exe, cmd);
 		}
 
-		public static void Open(string template, ConsolePipes pipes) {
-			Open(template, $"mono MonoToolsServer.exe -console={pipes.Pipes}");
+		public static void Open(string template, Process p, ClientSession session, CancellationToken cancel) {
+			var dll = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+			var monoserver = Path.Combine(Path.GetDirectoryName(dll), "MonoToolsServer.exe");
+			var mirror = ConsoleMirror.StartTerminalServer(p, session, cancel);
+			if (mirror != null) Open(template, $"mono {monoserver} -mirror={mirror.Pipes}");
 		}
 	}
 }

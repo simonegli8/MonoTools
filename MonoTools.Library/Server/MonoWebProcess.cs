@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System;
 using System.Reflection;
 using System.IO;
-using System.Text;
+using System.Threading;
 using NLog;
 
 namespace MonoTools.Library {
@@ -13,7 +13,7 @@ namespace MonoTools.Library {
 		public string Url => Message.Url;
 		Frameworks Framework => Message.Framework;
 
-		public MonoWebProcess(ExecuteMessage msg, MonoDebugServer server): base(msg, server) { RedirectOutput = true; }
+		public MonoWebProcess(ExecuteMessage msg, MonoDebugServer server, ClientSession session) : base(msg, server, session) { RedirectOutput = true; }
 
 		public static string SSLXpsArguments() {
 			var a = Assembly.GetExecutingAssembly();

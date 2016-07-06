@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Reflection;
-using System.IO.Pipes;
+using System.Threading;
 
 namespace MonoTools.Library {
 
@@ -20,15 +20,16 @@ namespace MonoTools.Library {
 		public bool CreateWindow = false;
 		public MonoDebugServer Server;
 		public ClientSession Session;
-		public bool Terminal;
+		public CancellationTokenSource Cancel;
 
-		public MonoProcess(ExecuteMessage msg, ClientSession session, MonoDebugServer server) { Message = msg; Server = server; Session = session; }
+		public MonoProcess(ExecuteMessage msg, MonoDebugServer server, ClientSession session) {
+			Message = msg; Server = server; Session = session; Cancel = new CancellationTokenSource();
+		}
 
 		public Process Start(string exe, Action<StringBuilder> arguments = null, Action<ProcessStartInfo> infos = null) {
 			var args = new StringBuilder();
 			var template = Server.TerminalTemplate;
-			string terminal = null;
-			string pipes = null;
+			bool terminal = false;
 
 			if (!Directory.Exists(Message.WorkingDirectory)) Directory.CreateDirectory(Message.WorkingDirectory);
 
@@ -38,7 +39,7 @@ namespace MonoTools.Library {
 
 			CreateWindow = false;
 			if (!OS.IsWindows && !string.IsNullOrEmpty(Server.TerminalTemplate)) { // use TerminalTemplate to start process
-				Terminal = true;
+				terminal = true;
 				CreateWindow = true;
 			} else if (OS.IsWindows && !RedirectOutput) {
 				CreateWindow = true;
@@ -58,6 +59,9 @@ namespace MonoTools.Library {
 			process.EnableRaisingEvents = false;
 
 			process.Start();
+
+			if (terminal) Terminal.Open(Server.TerminalTemplate, process, Session, Cancel.Token);
+			else ConsoleMirror.StartServer(process, Session, Cancel.Token);
 
 			RaiseProcessStarted();
 
@@ -93,9 +97,9 @@ namespace MonoTools.Library {
 			return IPAddress.Parse("127.0.0.1");
 		}
 
-		public static MonoProcess Start(ExecuteMessage msg, MonoDebugServer server) {
-			if (msg.ApplicationType == ApplicationTypes.WebApplication) return new MonoWebProcess(msg, server);
-			return new MonoDesktopProcess(msg, server);
+		public static MonoProcess Start(ExecuteMessage msg, MonoDebugServer server, ClientSession session) {
+			if (msg.ApplicationType == ApplicationTypes.WebApplication) return new MonoWebProcess(msg, server, session);
+			return new MonoDesktopProcess(msg, server, session);
 		}
 	}
 }

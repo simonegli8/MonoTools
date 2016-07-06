@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.Text;
+using System.Threading;
 
 namespace MonoTools.Library {
 
 	internal class MonoDesktopProcess : MonoProcess {
 
-		public MonoDesktopProcess(ExecuteMessage msg, MonoDebugServer server): base(msg, server) { RedirectOutput = msg.ApplicationType == ApplicationTypes.WindowsApplication; }
+		public MonoDesktopProcess(ExecuteMessage msg, MonoDebugServer server, ClientSession session): base(msg, server, session) { RedirectOutput = msg.ApplicationType == ApplicationTypes.WindowsApplication; }
 
 		public override Process Start() {
 			return Start(MonoUtils.GetMonoPath(), args => {

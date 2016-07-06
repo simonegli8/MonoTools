@@ -84,7 +84,7 @@
     <Compile Include="OS.cs" />
     <Compile Include="PipeQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ConsolePipes.cs" />
+    <Compile Include="ConsoleMirror.cs" />
     <Compile Include="StreamExtension.cs" />
     <Compile Include="SubStream.cs" />
     <Compile Include="ExtensionMethods.cs" />
