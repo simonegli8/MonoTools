@@ -116,13 +116,13 @@
     <Content Include="MonoToolsLogo.ico" />
     <EmbeddedResource Include="Resources\Mono.Cecil.dll" />
     <EmbeddedResource Include="Resources\Mono.Cecil.Rocks.dll" />
-    <EmbeddedResource Include="Resources\Mono.Debugger.Soft.dll" />
+    <Content Include="Resources\Mono.Debugger.Soft.dll" />
     <Content Include="Resources\Mono.Posix.dll" />
     <EmbeddedResource Include="Resources\MonoTools.Build.dll" />
     <EmbeddedResource Include="Resources\MonoTools.Debugger.dll" />
     <EmbeddedResource Include="Resources\MonoTools.Debugger.Library.dll" />
     <EmbeddedResource Include="Resources\Techl.dll" />
-    <EmbeddedResource Include="Resources\Techl.Mono.Cecil.dll" />
+    <Content Include="Resources\Techl.Mono.Cecil.dll" />
     <EmbeddedResource Include="Resources\Techl.Mono.Debugger.Soft.dll" />
     <EmbeddedResource Include="Resources\NLog.dll" />
   </ItemGroup>
