@@ -211,3 +211,5 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 /MonoTools.Debugger.Setup/Server.zip
+/MonoTools.Server/Resources
+/MonoTools.Server.Setup/Resources

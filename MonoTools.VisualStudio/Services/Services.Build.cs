@@ -214,8 +214,8 @@ namespace MonoTools.VisualStudio {
 				var property = bproj.Properties.FirstOrDefault(prop => !prop.IsImported && prop.Name == "XBuild");
 				var import = bproj.Xml.Imports.FirstOrDefault(imp => imp.Project == imppath);
 
-				if (property == null) bproj.Xml.AddProperty("XBuild", "$([System.Environment]::CommandLine.Contains(\"xbuild\"))");
-				else property.UnevaluatedValue = "$([System.Environment]::CommandLine.Contains(\"xbuild\"))";
+				if (property == null) bproj.Xml.AddProperty("XBuild", "$([System.Environment]::CommandLine.ToLower().Contains(\"mono\"))");
+				else property.UnevaluatedValue = "$([System.Environment]::CommandLine.ToLower().Contains(\"mono\"))";
 
 				if (import == null) bproj.Xml.AddImport(imppath).Condition = " '$(XBuild)' == 'False' ";
 				else import.Condition = " '$(XBuild)' == 'False' ";
@@ -245,8 +245,8 @@ namespace MonoTools.VisualStudio {
 				var property = bproj.Properties.FirstOrDefault(prop => !prop.IsImported && prop.Name == "XBuild");
 				var hassuppress = bproj.Xml.PropertyGroups.Any(g => g.Properties.Any(p => p.Name == "BuildDependsOn" && p.Value == "" && p.Condition == " '$(XBuild)' == 'True' "));
 
-				if (property == null) bproj.Xml.AddProperty("XBuild", "$([System.Environment]::CommandLine.Contains(\"xbuild\"))");
-				else property.UnevaluatedValue = "$([System.Environment]::CommandLine.Contains(\"xbuild\"))";
+				if (property == null) bproj.Xml.AddProperty("XBuild", "$([System.Environment]::CommandLine.ToLower().Contains(\"mono\"))");
+				else property.UnevaluatedValue = "$([System.Environment]::CommandLine.ToLower().Contains(\"mono\"))";
 
 				if (!hassuppress) {
 					var group = bproj.Xml.CreatePropertyGroupElement();

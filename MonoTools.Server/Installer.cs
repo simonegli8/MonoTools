@@ -9,11 +9,12 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Mono.Unix.Native;
 
-namespace MonoTools.Server.Setup {
+namespace MonoTools.Server {
 
 	public static class Installer {
 
 		public static string LibPath => "/usr/lib/monodebugger/";
+		public const string ExeName = "MonoDebugger.exe";
 		public static Action<double> NotifyProgress = n => { };
 		public static string Password;
 		public static string Ports;
@@ -72,68 +73,37 @@ namespace MonoTools.Server.Setup {
 			}
 		}
 
-		public static void SaveResxFile(string resource, string destination) {
-			destination = Path.Combine(LibPath, destination);
-			using (var src = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource))
-			using (var file = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.Write)) {
-				src.CopyTo(file);
-			}
-			Chown(destination);
-		}
 
-		public static void Unzip(Stream zipStream, string outFolder, Func<string, string> filter = null) {
-			var files = new List<string>();
-			var notifier = NotifyProgress != null ? new Action<Silversite.Services.ProgressArgs>(args => NotifyProgress(args.Progress*0.6)) : null;
-			Func<string, string> listfilter = file => {
-				if (file != null) {
-					files.Add(file);
-					if (filter != null) file = filter(file);
-				}
-				return file;
-			};
-			Silversite.Services.Zip.Extract(zipStream, outFolder, listfilter, notifier);
-			foreach (var file in files) Chown(file);
-		}
-
-
-		public static void InstallZip() {
+		public static void InstallSelf() {
 			if (!Directory.Exists(LibPath)) Directory.CreateDirectory(LibPath);
 			var logPath = Path.Combine(LibPath, "Log");
 			if (!Directory.Exists(logPath)) Directory.CreateDirectory(logPath);
 			Chown(LibPath); Chown(logPath);
 
-			using (var zip = Assembly.GetExecutingAssembly().GetManifestResourceStream("MonoTools.Server.Setup.Server.zip")) {
-				Unzip(zip, LibPath);
-			}
-
 			var self = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-			var libself = Path.Combine(LibPath, "MonoToolsServerSetup.exe");
-			File.Copy(self, libself);
+			var libself = Path.Combine(LibPath, ExeName);
+			File.Copy(self, libself, true);
 			Chown(libself);
 		}
 
 		public static void InstallScript() {
-			const string script1 = "/usr/sbin/monotools";
-			var exe1 = Path.Combine(LibPath, "MonoToolsServer.exe");
-			File.WriteAllText(script1, $"exec mono {exe1} $@");
-			Chown(script1, true);
-			const string script2 = "/usr/sbin/monotools-setup";
-			var exe2 = Path.Combine(LibPath, "MonoToolsServerSetup.exe");
-			File.WriteAllText(script2, $"exec mono {exe2} $@");
-			Chown(script2, true);
+			const string script = "/usr/bin/monodebug";
+			var exe = Path.Combine(LibPath, ExeName);
+			File.WriteAllText(script, $"exec mono {exe} $@");
+			Chown(script, true);
 		}
 
 		public static void InstallSession() {
 			var xsession = "#! /bin/bash";
 			var xsessionfile = Path.Combine(Home, ".xsession");
-			var exe = Path.Combine(LibPath, "MonoToolsServer.exe");
+			var exe = "monodebug";
 			if (File.Exists(xsessionfile)) {
 				xsession = File.ReadAllText(xsessionfile);
-				var ex = new Regex($"^mono {exe} .*$", RegexOptions.Multiline);
+				var ex = new Regex($"^{exe} .*$", RegexOptions.Multiline);
 				if (Upgrade && !ex.IsMatch(xsession)) return;
 				ex.Replace(xsession, "");
 			}
-			xsession += $"\nmono {exe}";
+			xsession += $"\n{exe}";
 			if (!string.IsNullOrEmpty(Ports)) xsession += $" -ports={Ports}";
 			if (!string.IsNullOrEmpty(Password)) xsession += $" -password={Password}";
 			if (!string.IsNullOrEmpty(TerminalTemplate)) xsession += $" -termtempl={TerminalTemplate}";
@@ -186,7 +156,7 @@ in a console window.
 			Sudo(SudoPassword);
 
 			if (Password == null && Ports == null) {
-				var win = Window.OpenDialog(@"MonoTools.Server Setup
+				var win = Window.OpenDialog(@"MonoDebugger Setup
 =======================
 
 
@@ -211,7 +181,7 @@ in a console window.
 				else Setup = Setups.Cancel;
 			}
 			if (Setup == Setups.Cancel) return;
-			InstallZip();
+			InstallSelf();
 			InstallScript();
 			if (Setup == Setups.Service) InstallSession();
 			Help();

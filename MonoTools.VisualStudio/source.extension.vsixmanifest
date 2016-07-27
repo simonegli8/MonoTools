@@ -2,7 +2,7 @@
 
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
 	<Metadata>
-		<Identity Id="694ABA35-6EFE-4AC8-8D8B-0B99867C0720" Version="2.1" Language="en-US" Publisher="johnshope.com" />
+		<Identity Id="694ABA35-6EFE-4AC8-8D8B-0B99867C0720" Version="2.11" Language="en-US" Publisher="johnshope.com" />
 		<DisplayName>MonoTools</DisplayName>
 		<Description xml:space="preserve">MonoTools. Debugging, XBuild, pdb2mdb &amp; MoMA support for Mono in VisualStudio. </Description>
 		<MoreInfo>https://github.com/simonegli8/MonoTools</MoreInfo>

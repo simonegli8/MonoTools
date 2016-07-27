@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MonoTools.Server</RootNamespace>
-    <AssemblyName>MonoToolsServer</AssemblyName>
+    <AssemblyName>MonoDebugger</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\sn.pfx</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -80,6 +80,11 @@
     <ApplicationIcon>MonoToolsLogo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Mono.Posix.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c">
@@ -90,8 +95,13 @@
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="ConsoleWindows.cs" />
+    <Compile Include="Installer.cs" />
+    <Compile Include="ResourceAssemblyLoader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runtime.cs" />
+    <Compile Include="UI.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -104,8 +114,26 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="MonoToolsLogo.ico" />
+    <EmbeddedResource Include="Resources\Mono.Cecil.dll" />
+    <EmbeddedResource Include="Resources\Mono.Cecil.Rocks.dll" />
+    <EmbeddedResource Include="Resources\Mono.Debugger.Soft.dll" />
+    <Content Include="Resources\Mono.Posix.dll" />
+    <EmbeddedResource Include="Resources\MonoTools.Build.dll" />
+    <EmbeddedResource Include="Resources\MonoTools.Debugger.dll" />
+    <EmbeddedResource Include="Resources\MonoTools.Debugger.Library.dll" />
+    <EmbeddedResource Include="Resources\Techl.dll" />
+    <EmbeddedResource Include="Resources\Techl.Mono.Cecil.dll" />
+    <EmbeddedResource Include="Resources\Techl.Mono.Debugger.Soft.dll" />
+    <EmbeddedResource Include="Resources\NLog.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="BeforeBuild">
+    <ItemGroup>
+      <ImportedProjectFiles Include="..\Output\$(Configuration)\**\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(Reference -> '%(HintPath)')" DestinationFolder="Resources" />
+    <Copy SourceFiles="@(ImportedProjectFiles)" DestinationFolder="Resources" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

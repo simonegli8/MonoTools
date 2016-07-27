@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace MonoTools.Server.Setup {
 
-	public static class OS {
+	public class UI {
 
-		public static bool IsMono => Type.GetType("Mono.Runtime") != null;
-		public static bool IsWindows => !IsMono;
+		public const bool IsWin = false;
 
 	}
 }

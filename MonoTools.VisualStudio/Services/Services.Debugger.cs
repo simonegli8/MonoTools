@@ -84,6 +84,11 @@ namespace MonoTools.VisualStudio {
 					serverurl = ext.BrowseURL ?? ext.NonSecureUrl ?? ext.SecureUrl ?? ext.IISUrl ?? "http://127.0.0.1:9000";
 					var uri = new Uri(serverurl);
 					var port = uri.Port;
+					if (ext.UseIIS) { // when running IIS, use random xsp port
+						port = 15000 + new Random(target.GetHashCode()).Next(5000);
+						uri = new Uri($"{uri.Scheme}://{uri.Host}:{port}");
+						serverurl = uri.AbsoluteUri;
+					}
 					var args = $"-v --port={port}";
 					var ssl = uri.Scheme.StartsWith("https");
 					if (ssl) args += MonoWebProcess.SSLXpsArguments();
@@ -254,6 +259,13 @@ namespace MonoTools.VisualStudio {
 				var ext = (WAProjectExtender)startup.Extender["WebApplication"];
 				action = ext.DebugStartAction.ToString();
 				serverurl = ext.BrowseURL ?? ext.NonSecureUrl ?? ext.SecureUrl ?? ext.IISUrl ?? "http://127.0.0.1:9000";
+				var uri = new Uri(serverurl);
+				var port = uri.Port;
+				if (ext.UseIIS) { // when running IIS, use random xsp port
+					port = 15000 + new Random(target.GetHashCode()).Next(5000);
+					uri = new Uri($"{uri.Scheme}://{uri.Host}:{port}");
+					serverurl = uri.AbsoluteUri;
+				}
 
 				await StartDebugger(target, null, ApplicationTypes.WebApplication, framework, outputDirectory, null, serverurl, local, host, ports, password);
 

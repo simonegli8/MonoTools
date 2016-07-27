@@ -30,7 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <XBuild>$([System.Environment]::CommandLine.Contains("xbuild"))</XBuild>
+    <XBuild>$([System.Environment]::CommandLine.ToLower().Contains("mono"))</XBuild>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>
@@ -40,6 +40,14 @@
     <ApplicationIcon>MonoToolsLogo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetZip.1.10.1\lib\net20\DotNetZip.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\Mono.Posix.dll</HintPath>
@@ -63,23 +71,33 @@
     <Compile Include="Lib\ObjectExtensions.cs" />
     <Compile Include="Lib\Paths.cs" />
     <Compile Include="Lib\PipeQueue.cs" />
+    <Compile Include="Lib\ResourceAssemblyLoader.cs" />
     <Compile Include="Lib\StringExtensions.cs" />
     <Compile Include="Lib\Tasks.cs" />
     <Compile Include="Lib\TypeExtensions.cs" />
+    <Compile Include="Lib\Unzip.cs" />
     <Compile Include="Lib\Zip.cs" />
-    <Compile Include="OS.cs" />
+    <Compile Include="Runtime.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="UI.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Lib\Mono.Posix.dll" />
     <Content Include="MonoToolsLogo.ico" />
+    <EmbeddedResource Include="Resources\DotNetZip.dll" />
+    <EmbeddedResource Include="Resources\ICSharpCode.SharpZipLib.dll" />
+    <Content Include="Resources\Mono.Posix.dll" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Server.zip" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <UsingTask TaskName="Zip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" Condition=" '$(XBuild)' == 'False' ">
@@ -123,12 +141,13 @@
     </PropertyGroup>
     <Zip Files="@(FilesToZip)" ZipFile="$(ProjectDir)$(TargetZipFile)" Overwrite="true" />
   </Target>
-  <Target Name="BeforeBuild" DependsOnTargets="ZipServer" />
+  <Target Name="BeforeBuild" DependsOnTargets="ZipServer">
+    <Copy SourceFiles="@(Reference -> '%(HintPath)')" DestinationFolder="Resources" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">
-  </Target>
-  -->
+  </Target>-->
 </Project>

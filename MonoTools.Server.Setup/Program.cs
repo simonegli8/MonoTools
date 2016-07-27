@@ -11,6 +11,8 @@ namespace MonoTools.Server.Setup {
 
 		public static void Main(string[] args) {
 
+			ResourceAssemblyLoader.Init();
+
 			if (args.Any(a => a.Contains("help") || a.Contains("?"))) {
 				Console.WriteLine(@"usage: mono MonoDebugger.exe [-ports=message-port,debugger-port,discovery-port] [-password=server-password] [-manual] [-sudopwd=sudo-password]
 
