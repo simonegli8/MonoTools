@@ -47,11 +47,12 @@ namespace MonoTools.VisualStudio {
 				string monoPath = DetermineMonoPath();
 
 				// Get current configuration
-				string configurationName = dte.Solution.SolutionBuild.ActiveConfiguration.Name.Replace(" ", "");
-				string platformName = ((SolutionConfiguration2)dte.Solution.SolutionBuild.ActiveConfiguration).PlatformName;
-				string fileName = string.Format(@"{0}\bin\xbuild.bat", monoPath);
-				string arguments = string.Format(@"""{0}"" /p:Configuration=""{1}"" /p:Platform=""{2}"" /v:n {3}", dte.Solution.FileName,
-					configurationName, platformName, rebuild ? " /t:Rebuild" : string.Empty);
+				string configurationName = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
+				string platformName = ((SolutionConfiguration2)dte.Solution.SolutionBuild.ActiveConfiguration).PlatformName.Replace(" ", "");
+				string platformArg = (platformName == "MixedPlatforms") ? "" : $@" / p:Platform = ""{ platformName}""";
+				string fileName = $@"{monoPath}\bin\xbuild.bat";
+				string rebuildArg = rebuild ? " /t:Rebuild" : string.Empty;
+				string arguments = $@"""{dte.Solution.FileName}"" /p:Configuration=""{configurationName}""{platformArg} /v:n{rebuildArg}", ,
 
 				// Run XBuild and show in output
 				System.Diagnostics.Process proc = new System.Diagnostics.Process {
