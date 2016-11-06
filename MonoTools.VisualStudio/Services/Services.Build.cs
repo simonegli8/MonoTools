@@ -47,7 +47,7 @@ namespace MonoTools.VisualStudio {
 				string monoPath = DetermineMonoPath();
 
 				// Get current configuration
-				string configurationName = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
+				string configurationName = dte.Solution.SolutionBuild.ActiveConfiguration.Name.Replace(" ", "");
 				string platformName = ((SolutionConfiguration2)dte.Solution.SolutionBuild.ActiveConfiguration).PlatformName;
 				string fileName = string.Format(@"{0}\bin\xbuild.bat", monoPath);
 				string arguments = string.Format(@"""{0}"" /p:Configuration=""{1}"" /p:Platform=""{2}"" /v:n {3}", dte.Solution.FileName,

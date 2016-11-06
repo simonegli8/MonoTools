@@ -15,5 +15,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion(App.Version)]
 
 public class App {
-	public const string Version = "2.1";
+	public const string Version = "2.12";
 }
