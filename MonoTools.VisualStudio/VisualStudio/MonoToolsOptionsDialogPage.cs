@@ -17,7 +17,7 @@
 
 		[Category("Mono Debugger Settings")]
 		[DisplayName("Mono Debugger Ports")]
-		[Description("Mono debugger ports (for example \"12002,12003,12004\").\nIf you set the ports here, you must pass them as argument to MonoDebugger.exe")]
+		[Description("Mono debugger ports (for example \"12002,12003,12004\").\nIf you set the ports here, you must pass them as argument to monodebug.exe")]
 		public string MonoDebuggerPorts { get; set; }
 
 		[Category("Mono Debugger Settings"), DisplayName("Mono Debugger Password"), Description("Mono debugger password.")]

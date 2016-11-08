@@ -28,13 +28,23 @@ namespace MonoTools.Server {
 					var filename = assemblyName + ".dll";
 					// find file in probing paths
 					var exe = Assembly.GetExecutingAssembly();
-					var file = exe.GetManifestResourceNames().First(f => f.EndsWith(filename));
-					if (file == null) return null;
-					var reader = new BinaryReader(exe.GetManifestResourceStream(file));
-					// load assembly
-					//Debugger.Log(1, "", $"Loading assembly {args.Name}");
-					var name = new AssemblyName(assemblyName);
-					return Assembly.Load(reader.ReadBytes((int)reader.BaseStream.Length));
+					var names = exe.GetManifestResourceNames();
+					var dll = names.FirstOrDefault(f => f.EndsWith(filename));
+					if (dll == null) return null;
+					var reader = new BinaryReader(exe.GetManifestResourceStream(dll));
+					var dllbytes = reader.ReadBytes((int)reader.BaseStream.Length);
+
+					var pdbname = OS.Runtime.IsMono ? filename + ".mdb" : assemblyName + ".pdb";
+					var pdb = names.FirstOrDefault(f => f.EndsWith(pdbname));
+					if (pdb != null) {
+						reader = new BinaryReader(exe.GetManifestResourceStream(pdb));
+						var pdbbytes = reader.ReadBytes((int)reader.BaseStream.Length);
+						// load assembly
+						return Assembly.Load(dllbytes, pdbbytes);
+					} else {
+						// load assembly
+						return Assembly.Load(dllbytes);
+					}
 				} catch {
 				} finally {
 					lock (loading) loading.Remove(args.Name);

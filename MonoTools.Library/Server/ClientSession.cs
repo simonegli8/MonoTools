@@ -91,7 +91,7 @@ namespace MonoTools.Library {
 		}
 
 		private void StartMono(ExecuteMessage msg) {
-			MonoDebugServer.Current.SuspendCancelKey();
+			MonoDebugServer.Current.SuspendKeyInput();
 
 			msg.WorkingDirectory = string.IsNullOrEmpty(msg.WorkingDirectory) ? msg.RootPath : msg.WorkingDirectory;
 			MonoProcess proc = MonoProcess.Start(msg, Server, this);
@@ -145,7 +145,7 @@ namespace MonoTools.Library {
 				logger.Trace("Cant delete {0} - {1}", RootPath, ex.Message);
 			}
 
-			MonoDebugServer.Current.ResumeCancelKey();
+			MonoDebugServer.Current.ResumeKeyInput();
 		}
 	}
 }

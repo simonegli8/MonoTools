@@ -43,7 +43,7 @@ namespace MonoTools.Library {
 					}
 				},
 				infos => {
-					infos.CreateNoWindow = true;
+					infos.CreateNoWindow = false;
 					infos.UseShellExecute = false;
 					infos.EnvironmentVariables["MONO_OPTIONS"] = DebugArgs;
 				});

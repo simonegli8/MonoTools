@@ -35,7 +35,9 @@ namespace MonoTools.Library {
 
 			if (Message.ApplicationType != ApplicationTypes.ConsoleApplication) RedirectOutput = true;
 
-			var server = new Uri(Assembly.Load("MonoTools.Server").CodeBase).LocalPath;
+			var codeBase = Assembly.GetExecutingAssembly().CodeBase ?? Assembly.GetEntryAssembly().CodeBase;
+
+			var server = new Uri(codeBase).LocalPath;
 
 			CreateWindow = false;
 			if (!OS.IsWindows && !string.IsNullOrEmpty(Server.TerminalTemplate)) { // use TerminalTemplate to start process

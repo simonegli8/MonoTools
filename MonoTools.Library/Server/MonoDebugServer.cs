@@ -31,6 +31,10 @@ namespace MonoTools.Library {
 		private TcpListener tcp;
 
 		public bool IsLocal = false;
+		static bool Running = false;
+		static bool ListeningForInput = false;
+
+		public event Action<ConsoleKeyInfo> KeyPress;
 
 		public static void ParsePorts(string ports, out int messagePort, out int debuggerPort, out int discoveryPort) {
 			if (!string.IsNullOrEmpty(ports)) {
@@ -71,11 +75,14 @@ namespace MonoTools.Library {
 		}
 
 		public void Start() {
-			Current = this;
+			lock (Current) {
+				if (Running) return;
+				Running = true;
+			}
 			if (!IsLocal) {
 				tcp = new TcpListener(IPAddress.Any, MessagePort);
 				tcp.Start();
-				ListenForCancelKey();
+				StartKeyInput();
 			}
 			listeningTask = Task.Run(() => {
 				try {
@@ -86,14 +93,20 @@ namespace MonoTools.Library {
 
 		private CancellationTokenSource ConsoleCancel = new CancellationTokenSource();
 
-		public void ListenForCancelKey() {
-			string input;
+		public void StartKeyInput() {
+			lock (Current) {
+				if (ListeningForInput) return;
+				ListeningForInput = true;
+			}
+			ConsoleCancel = new CancellationTokenSource();
+			ConsoleKeyInfo input;
 			Task.Run((Action)(() => {
 				while (true) {
 					bool doSleep = false;
 					try {
-						input = Console.ReadLine();
-						if (input != null) break;
+						input = Console.ReadKey();
+						//if (input.Key == ConsoleKey.Escape) break;
+						if (KeyPress != null) KeyPress(input);
 					} catch (IOException) {
 						// This might happen on appdomain unload
 						// until the previous threads are terminated.
@@ -109,15 +122,16 @@ namespace MonoTools.Library {
 			}), ConsoleCancel.Token);
 		}
 
-		public void SuspendCancelKey() {
-			if (!IsLocal) ConsoleCancel.Cancel();
+		public void SuspendKeyInput() {
+			lock (Current) {
+				if (!ListeningForInput) return;
+				ListeningForInput = false;
+			}
+			if (!IsLocal && ListeningForInput) ConsoleCancel.Cancel();
 		}
 
-		public void ResumeCancelKey() {
-			if (!IsLocal) {
-				ConsoleCancel = new CancellationTokenSource();
-				ListenForCancelKey();
-			}
+		public void ResumeKeyInput() {
+			if (!IsLocal && ListeningForInput) StartKeyInput();
 		}
 
 		private void StartListening(CancellationToken token) {
@@ -144,11 +158,16 @@ namespace MonoTools.Library {
 					}
 				}
 			} catch (Exception ex) {
-				logger.Error(ex.ToString());
+				if (!Cancel.IsCancellationRequested) logger.Error(ex.ToString());
 			}
 		}
 
 		public void Stop() {
+			lock (Current) {
+				if (!Running) return;
+				Running = false;
+				ListeningForInput = false;
+			}
 			try {
 				Cancel.Cancel();
 				ConsoleCancel.Cancel();
@@ -166,7 +185,7 @@ namespace MonoTools.Library {
 			} catch (Exception ex) {
 				logger.Error(ex.ToString());
 			} finally {
-				logger.Info("Stop Server");
+				logger.Info("\r\nStop Server");
 			}
 		}
 

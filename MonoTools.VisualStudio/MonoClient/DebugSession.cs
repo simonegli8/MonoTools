@@ -63,11 +63,11 @@ namespace MonoTools.VisualStudio.MonoClient {
 			if (communication.IsLocal) return;
 
 			var root = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-			var setupexe = Path.Combine(root, "MonoToolsServerSetup.exe");
+			var setupexe = Path.Combine(root, "monodebug.exe");
 
 			ports = ports ?? Options.Ports;
 			password = password ?? Options.Password;
-			var args = new StringBuilder();
+			var args = new StringBuilder("-i ");
 			if (!string.IsNullOrEmpty(ports)) {
 				args.Append("-ports=");
 				args.Append(ports);

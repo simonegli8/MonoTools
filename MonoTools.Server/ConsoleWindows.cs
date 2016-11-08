@@ -276,6 +276,7 @@ namespace MonoTools.Server {
 		/// <param name="defaults">An object (usualy an anonymous type), with properties or fiels corresponding to the inputs in the template, containing default values as strings.</param>
 		/// <returns>Returns a dynamic object with fields named after the inputs in the template and of type Window.Input, so you can read out entered values, or set a progress bar's progess value.</returns>
 		public dynamic Show(string text, object defaults = null) {
+			if (!text.Contains("<")) text += "\n\n<!Ok>[    Ok    ]</!Ok>";
 			Clear();
 			var lines = text.Split('\n').Select(line => line.Trim('\r')).ToArray();
 			int top;

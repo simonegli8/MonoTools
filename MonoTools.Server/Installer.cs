@@ -14,7 +14,7 @@ namespace MonoTools.Server {
 	public static class Installer {
 
 		public static string LibPath => "/usr/lib/monodebugger/";
-		public const string ExeName = "MonoDebugger.exe";
+		public const string ExeName = "monodebug.exe";
 		public static Action<double> NotifyProgress = n => { };
 		public static string Password;
 		public static string Ports;
@@ -119,17 +119,11 @@ namespace MonoTools.Server {
 				Window.OpenDialog(@"You can now use this machine as
 a debug server with MonoTools.
 If you have set a password and custom ports, you need to set them in
-the MonoTools options in VisualStudio also.
-
-<!Ok>[    Ok    ]</!Ok>
-");
+the MonoTools options in VisualStudio also.");
 			} else if (Setup == Setups.Manual) {
 				Window.OpenDialog(@"To run the mono debug server type
-monodebugger
-in a console window.
-
-<!Ok>[    Ok    ]</!Ok>
-");
+monodebug 
+in a terminal.");
 			}
 		}
 
@@ -153,10 +147,13 @@ in a console window.
 
 		public static void Install() {
 
-			Sudo(SudoPassword);
+			
+			if (OS.Runtime.IsWindows) Window.OpenDialog("Cannot install server on Windows.");
+			else {
+				Sudo(SudoPassword);
 
-			if (Password == null && Ports == null) {
-				var win = Window.OpenDialog(@"MonoDebugger Setup
+				if (Password == null && Ports == null) {
+					var win = Window.OpenDialog(@"MonoDebugger Setup
 =======================
 
 
@@ -174,17 +171,19 @@ in a console window.
 
 <!Service>[  Start as Service  ]</!Service>      <&Manual>[  Start manually  ]</&Manual>      <~Cancel>[  Cancel  ]</~Cancel> 
 ", new { Password = "", Ports = "" });
-				Ports = win.Ports.Value;
-				Password = win.Password.Value;
-				if (win.Service.Selected) Setup = Setups.Service;
-				else if (win.Manual.Selected) Setup = Setups.Manual;
-				else Setup = Setups.Cancel;
+					Ports = win.Ports.Value;
+					Password = win.Password.Value;
+					if (win.Service.Selected) Setup = Setups.Service;
+					else if (win.Manual.Selected) Setup = Setups.Manual;
+					else Setup = Setups.Cancel;
+				}
+				if (Setup == Setups.Cancel) return;
+				InstallSelf();
+				InstallScript();
+				if (Setup == Setups.Service) InstallSession();
+				Help();
 			}
-			if (Setup == Setups.Cancel) return;
-			InstallSelf();
-			InstallScript();
-			if (Setup == Setups.Service) InstallSession();
-			Help();
+			UI.Clear();
 		}
 	}
 }

@@ -71,7 +71,8 @@ namespace MonoTools.Library {
 		}
 
 		public static void Open(string template, Process p, ClientSession session, CancellationToken cancel) {
-			var dll = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+			var codeBase = Assembly.GetExecutingAssembly().CodeBase ?? Assembly.GetEntryAssembly().CodeBase;
+			var dll = new Uri(codeBase).LocalPath;
 			var monoserver = Path.Combine(Path.GetDirectoryName(dll), "MonoToolsServer.exe");
 			var mirror = ConsoleMirror.StartTerminalServer(p, session, cancel);
 			if (mirror != null) Open(template, $"mono {monoserver} -mirror={mirror.Pipes}");

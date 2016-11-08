@@ -12,6 +12,8 @@ namespace MonoTools.VisualStudio {
 
 	public partial class Services {
 
+		const string DebugExe = "monodebug.exe";
+
 		Window setupForm;
 		public async void ServerSetup() {
 			try {
@@ -28,16 +30,16 @@ namespace MonoTools.VisualStudio {
 			using (var ssh = new Connection(url, username, password)) {
 
 				var exe = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-				var path = Path.Combine(Path.GetDirectoryName(exe), "MonoToolsServerSetup.exe");
+				var path = Path.Combine(Path.GetDirectoryName(exe), DebugExe);
 				using (var setup = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-					ssh.Sftp.UploadFile(setup, "MonoDebuggerSetup.exe");
+					ssh.Sftp.UploadFile(setup, DebugExe);
 				}
 				var args = $"-sudopwd={password}";
 				if (!string.IsNullOrEmpty(ports)) args += $" -ports={ports}";
 				if (!string.IsNullOrEmpty(debugPassword)) args += $" -password={debugPassword}";
 				if (manual) args += " -manual";
-				logger.Trace($"run ssh://{username}@{url} => mono MonoToolsServerSetup.exe {args}");
-				ssh.Ssh.RunCommand($"mono MonoToolsServerSetup.exe {args}");
+				logger.Trace($"run ssh://{username}@{url} => mono {DebugExe} {args}");
+				ssh.Ssh.RunCommand($"mono {DebugExe} {args}");
 			}
 		}
 

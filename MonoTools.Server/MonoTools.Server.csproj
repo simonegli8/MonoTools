@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MonoTools.Server</RootNamespace>
-    <AssemblyName>MonoDebugger</AssemblyName>
+    <AssemblyName>monodebug</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\sn.pfx</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -33,6 +33,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <XBuild>$([System.Environment]::CommandLine.ToLower().Contains("mono"))</XBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -102,6 +103,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime.cs" />
+    <Compile Include="Server.cs" />
     <Compile Include="UI.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -114,12 +116,17 @@
     <Content Include="MonoToolsLogo.ico" />
     <EmbeddedResource Include="Resources\Mono.Cecil.dll" />
     <EmbeddedResource Include="Resources\Mono.Cecil.Rocks.dll" />
+    <Content Include="Resources\Mono.Cecil.Mdb.dll" />
+    <Content Include="Resources\Mono.Cecil.Pdb.dll" />
     <Content Include="Resources\Mono.Debugger.Soft.dll" />
+    <Content Include="Resources\Mono.Debugger.Soft.pdb" />
     <Content Include="Resources\Mono.Posix.dll" />
     <EmbeddedResource Include="Resources\MonoTools.Build.dll" />
     <EmbeddedResource Include="Resources\MonoTools.Debugger.dll" />
     <EmbeddedResource Include="Resources\MonoTools.Debugger.Library.dll" />
     <EmbeddedResource Include="Resources\Techl.dll" />
+    <Content Include="Resources\MonoTools.Build.pdb" />
+    <Content Include="Resources\MonoTools.Debugger.Library.pdb" />
     <Content Include="Resources\Techl.Mono.Cecil.dll" />
     <EmbeddedResource Include="Resources\Techl.Mono.Debugger.Soft.dll" />
     <EmbeddedResource Include="Resources\NLog.dll" />
@@ -131,6 +138,8 @@
   <Target Name="BeforeBuild">
     <ItemGroup>
       <ImportedProjectFiles Include="..\Output\$(Configuration)\**\*.dll" />
+      <ImportedProjectFiles Include="..\Output\$(Configuration)\**\*.pdb" />
+      <ImportedProjectFiles Include="..\Output\$(Configuration)\**\*.mdb" />
     </ItemGroup>
     <Copy SourceFiles="@(Reference -> '%(HintPath)')" DestinationFolder="Resources" />
     <Copy SourceFiles="@(ImportedProjectFiles)" DestinationFolder="Resources" />
@@ -138,8 +147,12 @@
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
-  </Target>
+  </Target>-->
   <Target Name="AfterBuild">
+    <ItemGroup>
+      <ToDeleteFiles Include="$(OutputPath)**\*.*" Exclude="$(OutputPath)monodebug.exe;$(OutputPath)monodebug.pdb;$(OutputPath)monodebug.exe.mdb;$(OutputPath)monodebug.vshost.exe;$(OutputPath)monodebug.vshost.exe.manifest;" />
+    </ItemGroup>
+    <Delete Files="@(ToDeleteFiles)" />
   </Target>
-  -->
+  <Import Project="$(MSBuildExtensionsPath)\johnshope.com\MonoTools\MonoTools.targets" Condition=" '$(XBuild)' == 'False' " />
 </Project>
