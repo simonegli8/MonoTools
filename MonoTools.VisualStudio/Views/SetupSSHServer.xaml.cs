@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Windows;
-using MonoTools.VisualStudio.MonoClient;
+using MonoTools.Debugger;
 
 namespace MonoTools.VisualStudio.Views {
 	/// <summary>
@@ -20,8 +20,6 @@ namespace MonoTools.VisualStudio.Views {
 			Url.Text = Options.Settings.LastSSHUrl;
 			Username.Text = Options.Settings.LastSSHUser;
 			Password.Password = Options.Settings.LastSSHPassword;
-			Manual.IsChecked = Options.Settings.LastSetupManualOption.GetValueOrDefault();
-			Service.IsChecked = !Manual.IsChecked;
 		}
 
 		protected override void OnClosing(CancelEventArgs e) {
@@ -33,14 +31,7 @@ namespace MonoTools.VisualStudio.Views {
 			base.OnClosing(e);
 		}
 
-		private void InstallClicked(object sender, RoutedEventArgs e) {
-			Services.Current.ServerSetup(Url.Text, Username.Text, Password.Password, DebugPassword.Password, Ports.Text, Manual.IsChecked.GetValueOrDefault());
-			DialogResult = true;
-			Close();
-		}
-
-		private async void UpgradeClicked(object sender, RoutedEventArgs e) {
-			await Services.Current.ServerUpgrade(Url.Text, Ports.Text, Password.Password);
+		private void SaveClicked(object sender, RoutedEventArgs e) {
 			DialogResult = true;
 			Close();
 		}
@@ -50,27 +41,10 @@ namespace MonoTools.VisualStudio.Views {
 			Close();
 		}
 
-		private void UrlModified(object sender, RoutedEventArgs e) {
-			Task.Run(() => {
-				try {
-					var host = new Uri(Url.Text).Host;
-					var ip = Dns.GetHostAddresses(host).FirstOrDefault();
-					if (ip != null) {
-						var client = new DebugClient(false, Ports.Text ?? Options.Ports, DebugPassword.Password ?? Options.Password);
-						bool outdated = false;
-						try {
-							using (var session = client.ConnectToServerAsync(ip.ToString()).Result) {
-								outdated = new Version(App.Version) > session.GetServerVersion();
-							}
-						} catch {
-							outdated = false;
-						}
-						Update.IsEnabled = outdated;
-					} else {
-						Update.IsEnabled = false;
-					}
-				} catch { }
-			});
+		public void KeyFileClicked(object sender, RoutedEventArgs e) {
+			var openFileDialog = new OpenFileDialog();
+			if (openFileDialog.ShowDialog() == true)
+				txtEditor.Text = openFileDialog.FileName;
 		}
 	}
 }

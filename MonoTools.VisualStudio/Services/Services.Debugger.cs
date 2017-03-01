@@ -6,10 +6,7 @@ using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using MonoTools.Library;
 using MonoTools.Debugger;
-using MonoTools.Debugger.VisualStudio;
-using MonoTools.VisualStudio.MonoClient;
 using MonoTools.VisualStudio.Views;
 using System.Diagnostics;
 using System.Net;
@@ -17,11 +14,12 @@ using System.Net.Sockets;
 using NLog;
 using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using Task = System.Threading.Tasks.Task;
-using Microsoft.MIDebugEngine;
 using System.Windows;
 using Microsoft.VisualStudio.Web.Application;
 
 namespace MonoTools.VisualStudio {
+
+	public enum ApplicationTypes { WebApplication, WindowsApplication, ConsoleApplication }
 
 	public partial class Services {
 
@@ -41,6 +39,8 @@ namespace MonoTools.VisualStudio {
 			System.Diagnostics.Debugger.Log(1, "", "proj.ConfigurationManager.ActiveConfiguration.Properties");
 			Dump(proj.ConfigurationManager.ActiveConfiguration.Properties);
 		}
+
+		
 
 		public async void Start() {
 			try {
@@ -89,53 +89,50 @@ namespace MonoTools.VisualStudio {
 						uri = new Uri($"{uri.Scheme}://{uri.Host}:{port}");
 						serverurl = uri.AbsoluteUri;
 					}
-					var args = $"-v --port={port}";
 					var ssl = uri.Scheme.StartsWith("https");
-					if (ssl) args += MonoWebProcess.SSLXpsArguments();
 
-					var monoBin = Path.Combine(DetermineMonoPath(), "bin\\xsp" + (isNet4 ? "4" : "") + ".bat");
-					var xsp = new ProcessStartInfo(monoBin, args) {
-						WorkingDirectory = outputDirectory,
-						UseShellExecute = false,
-						CreateNoWindow = false
+					var task = new StartWebTask() {
+						Framework = isNet4 ? Frameworks.Net4 : Frameworks.Net2,
+						LogLevels = "All",
+						NetFXBuild = false,
+						SourcePath = outputDirectory,
+						Ssl = ssl,
+						XspPort = port
 					};
-					System.Diagnostics.Process.Start(xsp);
 
 					if (action == "2") {
-						var run = new ProcessStartInfo(ext.StartExternalProgram, ext.StartCmdLineArguments) {
-							WorkingDirectory = ext.StartWorkingDirectory,
-							UseShellExecute = false,
-							CreateNoWindow = false,
-							WindowStyle = ProcessWindowStyle.Minimized
+						task.StartProgram = new StartProgramTask() {
+							Program = ext.StartExternalProgram,
+							Arguments = ext.StartCmdLineArguments,
+							WorkingDir = ext.StartWorkingDirectory,
 						};
-						System.Diagnostics.Process.Start(run);
-						return;
 					} else if (action == "3") {
-						System.Diagnostics.Process.Start(ext.StartExternalUrl);
+						task.OpenUrl = ext.StartExternalUrl;
 						return;
 					} else if (action == "0") {
-						System.Diagnostics.Process.Start(ext.CurrentDebugUrl);
+						task.OpenUrl = ext.CurrentDebugUrl;
 					} else if (action == "1") {
-						System.Diagnostics.Process.Start(ext.StartPageUrl);
+						task.OpenUrl = ext.StartPageUrl;
 					}
+
+					Server.Default.Start(task);
 				} else {
 					if (action == "0" || action == "2") {
 						exe = target;
 					}
 
-					var monoBin = Path.Combine(DetermineMonoPath(), "bin\\mono.exe");
-					var info = new ProcessStartInfo(monoBin, $"\"{exe}\" {arguments}") {
-						WorkingDirectory = workingDirectory,
-						UseShellExecute = false,
-						CreateNoWindow = false
+					var task = new StartProgramTask() {
+						Program = exe,
+						Arguments = arguments,
+						WorkingDir = workingDirectory
 					};
-					System.Diagnostics.Process.Start(info);
+
+					Server.Default.Start(task);
 
 					if (action == "2") System.Diagnostics.Process.Start(url);
 				}
 			} catch (Exception ex) {
 				logger.Error(ex);
-				if (Server != null) Server.Stop();
 				MessageBox.Show(ex.Message, "MonoTools.Debugger", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
@@ -168,51 +165,20 @@ namespace MonoTools.VisualStudio {
 				StartDebug(host);
 			} catch (Exception ex) {
 				logger.Error(ex);
-				if (Server != null) Server.Stop();
 				MessageBox.Show(ex.Message, "MonoTools.Debugger", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
-
-		public static MonoDebugServer Server = null;
 
 		public async void StartDebug(string host) {
 			try {
-				if (Server != null) {
-					Server.Stop();
-					Server = null;
-				}
 
 				BuildSolution();
 
-				if (host == null) {
-					Server = new MonoDebugServer(true);
-					Server.Start();
-					await AttachDebugger(Library.MonoProcess.GetLocalIp().ToString(), true);
-				} else if (host == "*" || host == "?" || host == "") StartSearching();
-				else {
-					await AttachDebugger(host, false);
-				}
+				if (string.IsNullOrEmpty(host)) await AttachDebugger(host, true);
+				else await AttachDebugger(host, false);
 			} catch (Exception ex) {
 				logger.Error(ex);
-				if (Server != null) Server.Stop();
 				MessageBox.Show(ex.Message, "MonoTools.Debugger", MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
-
-		public async void StartSearching() {
-			var dlg = new ServersFound();
-
-			if (dlg.ShowDialog().GetValueOrDefault()) {
-				try {
-					BuildSolution();
-					if (dlg.ViewModel.SelectedServer != null)
-						await AttachDebugger(dlg.ViewModel.SelectedServer.IpAddress.ToString());
-					else if (!string.IsNullOrWhiteSpace(dlg.ViewModel.ManualIp))
-						await AttachDebugger(dlg.ViewModel.ManualIp);
-				} catch (Exception ex) {
-					logger.Error(ex);
-					MessageBox.Show(ex.Message, "MonoTools.Debugger", MessageBoxButton.OK, MessageBoxImage.Error);
-				}
 			}
 		}
 
@@ -251,9 +217,6 @@ namespace MonoTools.VisualStudio {
 			url = props.Get("StartURL");
 			page = props.Get("StartPage");
 
-			var ports = Options.Ports;
-			var password = Options.Password;
-
 			if (isWeb) {
 				outputDirectory = Path.GetDirectoryName(outputDirectory);
 				var ext = (WAProjectExtender)startup.Extender["WebApplication"];
@@ -267,24 +230,23 @@ namespace MonoTools.VisualStudio {
 					serverurl = uri.AbsoluteUri;
 				}
 
-				await StartDebugger(target, null, ApplicationTypes.WebApplication, framework, outputDirectory, null, serverurl, local, host, ports, password);
+				var task = new StartWebTask() {
+					Framework = framework, LogLevels = "All", NetFXBuild = false, OpenUrl = serverurl, Ssl = uri.Scheme.StartsWith("https"), SourcePath = outputDirectory, XspPort = port
+				};
 
 				if (action == "2") {
-					var run = new ProcessStartInfo(ext.StartExternalProgram, ext.StartCmdLineArguments) {
-						WorkingDirectory = ext.StartWorkingDirectory,
-						UseShellExecute = false,
-						CreateNoWindow = false
+					task.StartProgram = new StartProgramTask() {
+						Program = ext.StartExternalProgram, Arguments = ext.StartCmdLineArguments, WorkingDir = ext.StartWorkingDirectory
 					};
-					System.Diagnostics.Process.Start(run);
-					return;
 				} else if (action == "3") {
-					System.Diagnostics.Process.Start(ext.StartExternalUrl);
-					return;
+					task.OpenUrl = ext.StartExternalUrl;
 				} else if (action == "0") {
-					System.Diagnostics.Process.Start(ext.CurrentDebugUrl);
+					task.OpenUrl = ext.CurrentDebugUrl;
 				} else if (action == "1") {
-					System.Diagnostics.Process.Start(ext.StartPageUrl);
+					task.OpenUrl = ext.StartPageUrl;
 				}
+
+				await StartDebugger(Server.Default, task);
 			} else {
 
 				var outputType = startup.Properties.Get("OutputType"); // output type (0: windows app, 1: console app, 2: class lib)
@@ -292,7 +254,9 @@ namespace MonoTools.VisualStudio {
 
 				var appType = outputType == "0" ? ApplicationTypes.WindowsApplication : ApplicationTypes.ConsoleApplication;
 
-				await StartDebugger(target, arguments, appType, framework, outputDirectory, workingDirectory, null, local, host, ports, password);
+				var task = new StartProgramTask() {
+					Framework = framework, NetFXBuild = false, Program = target, Arguments = arguments, SourcePath = outputDirectory, WorkingDir = workingDirectory
+				};
 
 				if (action == "2") System.Diagnostics.Process.Start(url);
 				else if (action == "1") {
@@ -306,59 +270,7 @@ namespace MonoTools.VisualStudio {
 			}
 		}
 
-		public async Task StartDebugger(string targetExe, string arguments, ApplicationTypes appType, Frameworks framework, string outputDir, string workingDir, string url, bool local, string host, string ports, string password) {
-
-			// resolve host
-			IPAddress ip; 
-			if (!IPAddress.TryParse(host, out ip)) {
-				IPAddress[] adresses = Dns.GetHostEntry(host).AddressList;
-				host = adresses.FirstOrDefault(adr => adr.AddressFamily == AddressFamily.InterNetwork)?.ToString();
-				if (host == null) throw new ArgumentException("Remote server not found.");
-			}
-			// setup communication
-			var client = new DebugClient(local, ports, password);
-			var session = await client.ConnectToServerAsync(host);
-			// send execute request
-			await session.ExecuteAsync(targetExe, arguments, appType, framework, Path.GetFullPath(outputDir), workingDir, url);
-			// read response
-
-			var cancel = local ? MonoDebugServer.Current.Cancel : null;
-
-			var response = await session.WaitForAnswerAsync(cancel.Token);
-			if (cancel.IsCancellationRequested) return;
-
-			if (!(response is StatusMessage)) throw new InvalidOperationException($"Wrong response message type {response.GetType().FullName}.");
-			var status = (StatusMessage)response;
-			if (status.Command == Library.Commands.Exit) return;
-			if (status.Command == Library.Commands.InvalidPassword) {
-				throw new InvalidOperationException("Invalid debug server password.");
-			} else if (status.Command == Library.Commands.Exception) {
-				throw new Exception($"Server Exception:\r\n{status.ExceptionType}\r\n{status.ExceptionMessage}\r\n{status.StackTrace}");
-			} else if (status.Command != Library.Commands.Started) {
-				throw new Exception($"Invalid response \"{status.Command}\" from server.");
-			}
-
-			// handle console output responses
-			consoleTask = Task.Run(async () => { 
-				try {
-					var msg = await session.WaitForAnswerAsync<StatusMessage>(cancel.Token);
-					if (cancel.IsCancellationRequested) return;
-					while (msg?.Command == Library.Commands.Info) {
-						var text = msg.OutputText ?? msg.ErrorText;
-						if (!string.IsNullOrEmpty(text)) {
-							Output.Text(text);
-							Debug.Write(text);
-						}
-						msg = await session.WaitForAnswerAsync<StatusMessage>(cancel.Token);
-						if (cancel.IsCancellationRequested) return;
-					}
-					if (msg?.Command == Library.Commands.Exception) {
-						logger.Error($"Server Exception:\r\n{status.ExceptionType}\r\n{msg.ExceptionMessage}\r\n{msg.StackTrace}");
-					} else if (msg?.Command == Library.Commands.Exit) {
-						DebuggedProcess.Instance.Detach();
-					} else	session.PushBack(msg);
-				} catch { }
-			});
+		public async Task StartDebugger(Server server, StartTask task) {
 
 			// start debugger
 			IntPtr pInfo = GetDebugInfo($"{host}:{client.DebuggerPort}", Path.GetFileName(targetExe), outputDir);
@@ -368,7 +280,6 @@ namespace MonoTools.VisualStudio {
 				int hr = dbg.LaunchDebugTargets(1, pInfo);
 				Marshal.ThrowExceptionForHR(hr);
 
-				DebuggedProcess.Instance.AssociateDebugSession(session);
 			} catch (Exception ex) {
 				logger.Error(ex);
 				string msg;

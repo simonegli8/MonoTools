@@ -1,0 +1,253 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{029531D9-6BF8-4D45-B01A-B6D3C53C87E0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MonoTools.Debugger.VsMono</RootNamespace>
+    <AssemblyName>MonoTools.Debugger.VsMono</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Debugger.Interop.10.0.10.0.30319\lib\Microsoft.VisualStudio.Debugger.Interop.10.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Debugger.Interop.11.0.11.0.50727\lib\Microsoft.VisualStudio.Debugger.Interop.11.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Debugger.Interop.12.0.12.0.21005\lib\Microsoft.VisualStudio.Debugger.Interop.12.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\packages\Microsoft.VisualStudio.Debugger.Interop.14.0.14.3.25407\lib\Microsoft.VisualStudio.Debugger.Interop.14.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.15.0, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Debugger.Interop.15.0.15.0.26201\lib\Microsoft.VisualStudio.Debugger.Interop.15.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\Microsoft.VisualStudio.Debugger.InteropA.9.0.21022\lib\Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Imaging, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Imaging.14.3.25407\lib\net45\Microsoft.VisualStudio.Imaging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\Microsoft.VisualStudio.OLE.Interop.7.10.6070\lib\Microsoft.VisualStudio.OLE.Interop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.14.0.14.3.25407\lib\Microsoft.VisualStudio.Shell.14.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Immutable.10.0.10.0.30319\lib\net40\Microsoft.VisualStudio.Shell.Immutable.10.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Immutable.11.0.11.0.50727\lib\net45\Microsoft.VisualStudio.Shell.Immutable.11.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Immutable.12.0.12.0.21003\lib\net45\Microsoft.VisualStudio.Shell.Immutable.12.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Immutable.14.0.14.3.25407\lib\net45\Microsoft.VisualStudio.Shell.Immutable.14.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.7.10.6071\lib\Microsoft.VisualStudio.Shell.Interop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.10.0.10.0.30319\lib\Microsoft.VisualStudio.Shell.Interop.10.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.11.0.11.0.61030\lib\Microsoft.VisualStudio.Shell.Interop.11.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.12.0.12.0.30110\lib\Microsoft.VisualStudio.Shell.Interop.12.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.8.0.8.0.50727\lib\Microsoft.VisualStudio.Shell.Interop.8.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.9.0.9.0.30729\lib\Microsoft.VisualStudio.Shell.Interop.9.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\Microsoft.VisualStudio.TextManager.Interop.7.10.6070\lib\Microsoft.VisualStudio.TextManager.Interop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\Microsoft.VisualStudio.TextManager.Interop.8.0.8.0.50727\lib\Microsoft.VisualStudio.TextManager.Interop.8.0.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Threading, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Threading.14.1.111\lib\net45\Microsoft.VisualStudio.Threading.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Utilities, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Utilities.14.3.25407\lib\net45\Microsoft.VisualStudio.Utilities.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Validation, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Validation.14.1.111\lib\net45\Microsoft.VisualStudio.Validation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Debugger.Soft">
+      <HintPath>vs-mono\deps\Mono.Debugger.Soft.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Debugging">
+      <HintPath>vs-mono\deps\Mono.Debugging.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Debugging.Soft">
+      <HintPath>vs-mono\deps\Mono.Debugging.Soft.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.0.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2016.0.0\lib\net40\Renci.SshNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Debugger\Host.cs" />
+    <Compile Include="Debugger\Launcher.cs" />
+    <Compile Include="Debugger\LocalBashHost.cs" />
+    <Compile Include="Debugger\LocalBashLauncher.cs" />
+    <Compile Include="Debugger\LocalCygwinHost.cs" />
+    <Compile Include="Debugger\LocalCygwinLauncher.cs" />
+    <Compile Include="Debugger\LocalHost.cs" />
+    <Compile Include="Debugger\LocalLauncher.cs" />
+    <Compile Include="Debugger\OS.cs" />
+    <Compile Include="Debugger\Pdb2MdbGenerator.cs" />
+    <Compile Include="Debugger\RemoteSshHost.cs" />
+    <Compile Include="Debugger\RemoteSshLauncher.cs" />
+    <Compile Include="Debugger\Server.cs" />
+    <Compile Include="Debugger\SftpExtensions.cs" />
+    <Compile Include="Debugger\SshConnection.cs" />
+    <Compile Include="Debugger\SshExtensions.cs" />
+    <Compile Include="Debugger\StartTasks.cs" />
+    <Compile Include="Debugger\DnsResolve.cs" />
+    <Compile Include="Debugger\MonoEngine.cs" />
+    <Compile Include="Debugger\ILauncher.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Debugger\.monotools.cert.cer" />
+    <EmbeddedResource Include="Debugger\.monotools.cert.pvk" />
+    <None Include="vs-mono\MonoProgram.Package\Debuggers\MonoDebuggerSettings.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Utils\ComponentException.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Utils\EngineUtils.cs" />
+    <None Include="app.config" />
+    <None Include="packages.config" />
+    <None Include="vs-mono\MonoProgram.Package\Debuggers\Connection.cs" />
+    <None Include="vs-mono\MonoProgram.Package\Debuggers\ConnectionManager.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\CustomLogger.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\DebuggerGuids.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Enumerator.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\AsynchronousEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\BreakpointBoundEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoBreakpointBoundEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoBreakpointEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoEngineCreateEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoExceptionEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoExpressionCompleteEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoProgramCreateEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoProgramDestroyEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoStepCompleteEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\MonoStoppingEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\ProgramDestroyEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Events\SynchronousEvent.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\Guids.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoBoundBreakpoint.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoBoundBreakpointsEnum.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoBreakpointManager.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoBreakpointResolution.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoCallbackExtensions.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoCallbackWrapper.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoCodeContextEnum.cs" />
+    <Compile Include="Debugger\MonoDebuggerSettings.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoDocumentContext.cs" />
+    <None Include="vs-mono\MonoProgram.Package\Debuggers\MonoEngine.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoExpression.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoFrameInfoEnum.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoMemoryAddress.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoModule.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoModuleEnum.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoPendingBreakpoint.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoProgramNode.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoProgramProvider.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoProperty.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoPropertyEnum.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoPropertyEnumerator.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoPropertyInfoEnum.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoSourceMapping.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoStackFrame.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoThread.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoThreadEnum.cs" />
+    <Compile Include="vs-mono\MonoProgram.Package\Debuggers\MonoThreadManager.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MonoTools.Build\MonoTools.Build.csproj">
+      <Project>{7ef3c263-1b7c-4901-8b9c-04350cf446c0}</Project>
+      <Name>MonoTools.Build</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

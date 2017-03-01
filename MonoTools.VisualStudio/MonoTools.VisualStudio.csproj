@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -30,7 +30,7 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkProfile />
-    <XBuild>$([System.Environment]::CommandLine.ToLower().Contains("mono"))</XBuild>
+    <XBuild>$(MSBuildToolsPath.ToLower().Contains("xbuild"))</XBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -143,10 +143,6 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Renci.SshNet, Version=2013.4.7.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SSH.NET.2013.4.7\lib\net40\Renci.SshNet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Core" />
@@ -170,35 +166,26 @@
     <Compile Include="Services\Services.Setup.cs" />
     <Compile Include="Settings\UserSettings.cs" />
     <Compile Include="Settings\UserSettingsManager.cs" />
-    <Compile Include="MonoClient\DebugClient.cs" />
-    <Compile Include="MonoClient\DebugSession.cs" />
-    <Compile Include="MonoClient\MonoServerDiscovery.cs" />
-    <Compile Include="MonoClient\MonoServerInformation.cs" />
+    <None Include="Archiv\DebugClient.cs" />
+    <None Include="Archiv\DebugSession.cs" />
     <Compile Include="source.extension.cs">
       <DependentUpon>source.extension.vsixmanifest</DependentUpon>
     </Compile>
     <Compile Include="Services\Services.Debugger.cs" />
-    <Compile Include="Utils\Connection.cs" />
     <Compile Include="Utils\PropertiesExtension.cs" />
-    <Compile Include="Utils\SftpExtensions.cs" />
-    <Compile Include="Utils\SshExtensions.cs" />
     <Compile Include="Utils\VsLogSeverity.cs" />
     <Compile Include="Utils\VsOutputWindowPaneExtensions.cs" />
-    <Compile Include="Views\ServersFound.xaml.cs">
-      <DependentUpon>ServersFound.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\ServersFoundViewModel.cs" />
     <Compile Include="Views\SetupSSHServer.xaml.cs">
       <DependentUpon>SetupSSHServer.xaml</DependentUpon>
     </Compile>
     <Compile Include="VisualStudio\ErrorListWriter.cs" />
     <Compile Include="VisualStudio\GlobalSuppressions.cs" />
     <Compile Include="VisualStudio\Guids.cs" />
-    <Compile Include="VisualStudio\MonoToolsInstaller.cs" />
     <Compile Include="VisualStudio\MonoToolsOptionsDialogPage.cs" />
     <Compile Include="VisualStudio\Options.cs" />
     <Compile Include="VisualStudio\Output.cs" />
     <Compile Include="VisualStudio\PkgCmdID.cs" />
+    <Compile Include="VisualStudio\ProvideDebugEngineAttribute.cs" />
     <Compile Include="VisualStudio\StatusBar.cs" />
     <Compile Include="VisualStudio\VSPackage.cs" />
   </ItemGroup>
@@ -265,10 +252,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Content>
-    <Page Include="Views\ServersFound.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\SetupSSHServer.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -284,24 +267,22 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Ssh\" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\MonoTools.Build\MonoTools.Build.csproj">
       <Project>{7ef3c263-1b7c-4901-8b9c-04350cf446c0}</Project>
       <Name>MonoTools.Build</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MonoTools.Debugger\MonoTools.Debugger.csproj">
-      <Project>{c99840f2-29f7-44fc-a152-3cdd7fc41b21}</Project>
-      <Name>MonoTools.Debugger</Name>
+    <ProjectReference Include="..\MonoTools.Debugger.VsMono\MonoTools.Debugger.VsMono.csproj">
+      <Project>{029531d9-6bf8-4d45-b01a-b6d3c53c87e0}</Project>
+      <Name>MonoTools.Debugger.VsMono</Name>
     </ProjectReference>
     <ProjectReference Include="..\MonoTools.Library\MonoTools.Library.csproj">
       <Project>{fe76aee5-c4e3-45ed-aa18-29df82ab405c}</Project>
       <Name>MonoTools.Library</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MonoTools.Server\MonoTools.Server.csproj">
-      <Project>{134655a3-ef22-4e4a-ae8d-9ee1282733a7}</Project>
-      <Name>MonoTools.Server</Name>
-    </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
@@ -322,8 +303,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-
-	<Target Name="Install" DependsOnTargets="Build">
-		<Exec Command="$(ProgramFilesx86)\Microsoft Visual Studio 14.0\Common7\IDE\VSIXInstaller.exe /a ..\Output\$(Configuration)\Extension\MonoTools.vsix" />
-	</Target>
+  <Target Name="Install" DependsOnTargets="Build">
+    <Exec Command="$(ProgramFilesx86)\Microsoft Visual Studio 14.0\Common7\IDE\VSIXInstaller.exe /a ..\Output\$(Configuration)\Extension\MonoTools.vsix" />
+  </Target>
 </Project>

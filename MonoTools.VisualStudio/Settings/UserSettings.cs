@@ -1,16 +1,16 @@
-﻿namespace MonoTools.VisualStudio {
+﻿using System.Collections.Generic;
+using MonoTools.Debugger;
+
+
+namespace MonoTools.VisualStudio {
 
 	public class UserSettings {
-		public UserSettings() {
-			LastIp = "127.0.0.1";
-		}
 
-		public string LastIp { get; set; }
+		public List<Server> ServerList{ get; set; }
 
-		public string LastSSHUrl { get; set; }
-		public string LastSSHUser { get; set; }
-		public string LastSSHPassword { get; set; }
-		public bool? LastSetupManualOption { get; set; }
+		public UserSettings() { ServerList = new List<Server>(); }
+
+		public static List<Server> Servers => UserSettingsManager.Current.ServerList;
 
 		public void Save() => UserSettingsManager.Instance.Save(this);
 	}

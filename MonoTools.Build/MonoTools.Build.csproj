@@ -13,7 +13,7 @@
     <AssemblyOriginatorKeyFile>..\sn.pfx</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <XBuild>$([System.Environment]::CommandLine.ToLower().Contains("mono"))</XBuild>
+    <XBuild>$(MSBuildToolsPath.ToLower().Contains("xbuild"))</XBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

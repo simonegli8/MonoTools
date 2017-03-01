@@ -16,10 +16,9 @@ using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.Win32;
 using MonoTools.Library;
 using MonoTools.Debugger;
-using MonoTools.Debugger.VisualStudio;
-using NLog;
+using MonoProgram.Package.Debuggers;
+
 using Process = System.Diagnostics.Process;
-using Microsoft.MIDebugEngine;
 
 namespace MonoTools.VisualStudio {
 
@@ -29,19 +28,19 @@ namespace MonoTools.VisualStudio {
 	[ProvideAutoLoad(Microsoft.VisualStudio.VSConstants.UICONTEXT.SolutionExists_string)]
 	[ProvideOptionPage(typeof(MonoToolsOptionsDialogPage), "MonoTools", "General", 0, 0, true)]
 	[Guid(Guids.MonoToolsPkgString)]
+	[ProvideDebugEngine("Mono Debug Engine", typeof(MonoProgramProvider), typeof(MonoEngine), Guids.EngineId, true, true, false)]
 	public sealed class VSPackage : Package, IDisposable {
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		//private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 		private Services services;
 
 		protected override void Initialize() {
 			var settingsManager = new ShellSettingsManager(this);
 			var configurationSettingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
 			UserSettingsManager.Initialize(configurationSettingsStore);
-			MonoLogger.Setup();
 			base.Initialize();
 			var dte = (DTE)GetService(typeof(DTE));
 			services = new Services(dte);
-			TryRegisterAssembly();
+			//TryRegisterAssembly();
 
 			ErrorsWindow.Initialize(this);
 			StatusBar.Initialize(this);
@@ -98,10 +97,10 @@ namespace MonoTools.VisualStudio {
 				debugMonoCmd.BeforeQueryStatus += HasStartupProject;
 				mcs.AddCommand(debugMonoCmd);
 
-				var logFileID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.OpenLogFile);
+				/* var logFileID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.OpenLogFile);
 				var logFileCmd = new OleMenuCommand(OpenLogFile, logFileID);
 				logFileCmd.BeforeQueryStatus += (o, e) => logFileCmd.Enabled = File.Exists(MonoLogger.LoggerPath);
-				mcs.AddCommand(logFileCmd);
+				mcs.AddCommand(logFileCmd); */
 
 				var MoMAID = new CommandID(Guids.MonoToolsCmdSet, (int)PkgCmdID.MoMASolution);
 				var MoMACmd = new OleMenuCommand(MoMAClicked, MoMAID);
@@ -128,14 +127,14 @@ namespace MonoTools.VisualStudio {
 			services.OpenLogFile();
 		}
 
-		private void TryRegisterAssembly() {
+		/* private void TryRegisterAssembly() {
 			try {
-				RegistryKey regKey = Registry.ClassesRoot.OpenSubKey($"CLSID\\{AD7Guids.EngineString}");
+				RegistryKey regKey = Registry.ClassesRoot.OpenSubKey($"CLSID\\{MonoEngine.ClassGuid}");
 
 				if (regKey != null)
 					return;
 
-				string location = typeof(DebuggedProcess).Assembly.Location;
+				string location = new Uri(typeof(MonoEngine).Assembly.CodeBase).LocalPath;
 
 				string regasm = @"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe";
 				if (!Environment.Is64BitOperatingSystem)
@@ -162,7 +161,7 @@ namespace MonoTools.VisualStudio {
 			} catch (Exception ex) {
 				logger.Error(ex);
 			}
-		}
+		} */
 
 		private void HasStartupProject(object sender, EventArgs e) {
 			var menuCommand = sender as OleMenuCommand;
@@ -267,18 +266,18 @@ namespace MonoTools.VisualStudio {
 		private bool disposed = false;
 		protected override void Dispose(bool disposing) {
 			base.Dispose(disposing);
-
+			
 			if (this.disposed)
 				return;
-
+			/*
 			if (disposing) {
 				//Dispose managed resources
 				if (Services.Server != null) {
 					Services.Server.Dispose();
 					Services.Server = null;
 				}
-			}
-
+			} */
+	
 			//Dispose unmanaged resources here.
 
 			disposed = true;

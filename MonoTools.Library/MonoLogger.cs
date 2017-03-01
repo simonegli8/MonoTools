@@ -7,6 +7,7 @@ using NLog.Config;
 using NLog.Targets;
 
 namespace MonoTools.Library {
+
 	public static class MonoLogger {
 		public static string LoggerPath { get; private set; }
 
